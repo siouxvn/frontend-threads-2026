@@ -6,5 +6,5 @@ hero:
     - text: Let's warm up!
       link: /to-do
     - text: GitHub
-      link: https://github.com/kieukhuongthinh/frontend-threads-2026
+      link: https://github.com/siouxvn/frontend-threads-2026
 ---
