@@ -2,13 +2,13 @@
   "name": "ft2026",
   "version": "0.0.2",
   "description": "A collection of frontend learnings",
-  "homepage": "https://kieukhuongthinh.github.io/frontend-threads-2026",
+  "homepage": "https://siouxvn.github.io/frontend-threads-2026",
   "bugs": {
-    "url": "https://github.com/kieukhuongthinh/frontend-threads-2026/issues"
+    "url": "https://github.com/siouxvn/frontend-threads-2026/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kieukhuongthinh/frontend-threads-2026.git"
+    "url": "git+https://github.com/siouxvn/frontend-threads-2026.git"
   },
   "license": "MIT",
   "exports": {
@@ -102,7 +102,7 @@
     "access": "public"
   },
   "authors": [
-    "kieukhuongthinh@gmail.com (Kieu Khuong Thinh)"
+    "thinh.kieu@sioux.asia (Thinh Kieu)"
   ],
   "msw": {
     "workerDirectory": [
