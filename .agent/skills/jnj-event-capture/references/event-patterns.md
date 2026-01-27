@@ -2,7 +2,11 @@
 
 ### Pattern 1: Simple View Event
 
-**Usage:**
+> ⚠️ **CRITICAL: React StrictMode Double-Firing**
+>
+> In development mode, React StrictMode intentionally runs `useEffect` **twice** to help detect side effects. This causes View events to be sent twice. **Always use the safe pattern with `useRef`** to prevent duplicate events.
+
+**❌ Avoid - Simple pattern (causes duplicate events in StrictMode):**
 
 ```typescript
 useEffect(() => {
@@ -12,6 +16,50 @@ useEffect(() => {
 }, []);
 ```
 
+**✅ Recommended - Safe pattern with ref:**
+
+```typescript
+// Track if event has been sent to prevent duplicates from StrictMode
+const viewEventSentRef = useRef(false);
+
+useEffect(() => {
+  if (!viewEventSentRef.current) {
+    viewEventSentRef.current = true;
+    eventTracker.capture({
+      name: events.VIEW_SOMETHING,
+    });
+  }
+}, []);
+```
+
+**✅ Recommended - Safe pattern with dynamic dependency (e.g., researchId):**
+
+```typescript
+// Track VIEW event - use ref to prevent duplicate events in StrictMode
+const viewEventSentRef = useRef<string | undefined>(undefined);
+
+useEffect(() => {
+  // Only send event if dependency has changed
+  if (viewEventSentRef.current !== researchId) {
+    viewEventSentRef.current = researchId;
+    eventTracker.capture({
+      name: events.VIEW_PATIENT_LIST,
+      description: {
+        data: {
+          researchId,
+        },
+      },
+    });
+  }
+}, [researchId]);
+```
+
+**Why this matters:**
+
+- Without the ref guard, events are sent twice in development (once per StrictMode mount)
+- In production, StrictMode doesn't double-fire, but using the safe pattern ensures consistency
+- The ref persists across StrictMode's simulated unmount/remount cycle
+
 **Files:**
 
 - Dashboard.tsx - VIEW_DASHBOARD
@@ -19,6 +67,7 @@ useEffect(() => {
 - SurgeryReport.tsx - VIEW_REPORT
 - SurgeryResources.tsx - VIEW_RESOURCES
 - MyResearch.tsx - VIEW_MY_RESEARCH
+- PatientList.tsx - VIEW_PATIENT_LIST
 
 ---
 
