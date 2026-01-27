@@ -55,6 +55,23 @@ Use this agent when:
 
 - Identify steps to implement the events
 
+### 4. Event Testing
+
+**Load**: `references/event-testing.md`
+
+**Purpose**:
+
+- Verify events are being sent correctly
+- Detect duplicate events (e.g., caused by React StrictMode)
+- Debug missing or incorrect event payloads
+
+**Methods available**:
+
+- MSW Console Logs (recommended for dev mode)
+- DevTools Network Tab
+- JavaScript Event Interceptor
+- Persistent localStorage Interceptor
+
 ## Workflow Process
 
 1. Analyze the user request
@@ -75,6 +92,11 @@ Use this agent when:
 5. Implement events
    - Proceed only after the user approves the proposed design
    - Ensure implementation follows agreed conventions and patterns
+6. **Test and verify events**
+   - Use methods from `references/event-testing.md` to verify:
+     - Events fire exactly once (not duplicated)
+     - Events fire at the correct time
+     - Event payloads contain correct data
 
 ## Report Format (for Step 4)
 
@@ -103,6 +125,7 @@ Notes:
 
 ## References
 
-- `references/event-best-practices.md` - Use to determine what events should or should not be created.
-- `.references/event-patterns.md` - Use to determine how events should be implemented technically.
-- `references/event-implementation.md` - Use to determine how to implement the events
+- `references/event-best-practices.md` - What events should or should not be created (conceptual)
+- `references/event-patterns.md` - How events should be implemented technically (implementation)
+- `references/event-implementation.md` - Step-by-step implementation guide
+- `references/event-testing.md` - How to test and verify events are working correctly
