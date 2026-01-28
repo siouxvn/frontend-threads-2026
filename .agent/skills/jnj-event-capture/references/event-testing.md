@@ -39,25 +39,7 @@ When running in dev mode with `yarn dev:mock`, **MSW (Mock Service Worker)** int
 
 ---
 
-## Method 2: DevTools Network Tab
-
-### Steps:
-
-1. Open browser DevTools (F12)
-2. Go to **Network** tab
-3. Filter by `XHR` or `Fetch` request type
-4. Type `event-logs` in the filter box
-5. Trigger the action that should send the event
-6. Click on the request to see details
-
-### What to check:
-
-- **Request Payload**: Verify event name and data are correct
-- **Request Count**: Ensure only 1 request is sent per action
-
----
-
-## Method 3: JavaScript Event Interceptor
+## Method 2: JavaScript Event Interceptor
 
 Use this method when you need to programmatically count and verify events **on the same page** (no navigation).
 
@@ -111,7 +93,7 @@ window.eventTrackingLogs.filter(e => e.eventName === 'research:other:view_patien
 
 ---
 
-## Method 4: Persistent Interceptor ⭐ RECOMMENDED
+## Method 3: Persistent Interceptor ⭐ RECOMMENDED
 
 Use localStorage to track events across page navigations. **This is the recommended method** because it works for all scenarios including View events that fire on page load.
 
@@ -297,6 +279,18 @@ Complete event verification requires 3 phases. Use arguments to run specific pha
 
 - **🚨 IMPORTANT:** The report MUST be output to a **markdown file** at the specified path, NOT just printed in chat.
 
+> **📋 REPORT REQUIREMENTS:**
+>
+> 1. **Events Summary Table** - List ALL expected events with their trigger action and count
+> 2. **Raw Logs Section** - Include the FULL JSON output from `localStorage.getItem('eventTrackingLogs')` including:
+>    - Event name (full format: `module:type:event_name`)
+>    - Timestamp
+>    - Description/Payload data
+> 3. **Three-Phase Coverage** - For CRUD events, explicitly verify all phases:
+>    - `_attempt` event (before API call)
+>    - `_succeeded` event (on success)
+>    - `_failed` event (on error) - if not tested, note "Not tested (requires simulated failure)"
+
 ````markdown
 # Event Testing Report - Phase 1 (Mock Mode)
 
@@ -305,23 +299,52 @@ Complete event verification requires 3 phases. Use arguments to run specific pha
 **Environment:** yarn dev:mock
 **User:** user / user123
 
-## Events Captured
+## Events Summary
 
-| #   | Event Name                       | Timestamp | Triggered By | Count | Status  |
-| --- | -------------------------------- | --------- | ------------ | ----- | ------- |
-| 1   | research:other:view_patient_list | 09:15:23  | Page load    | 1     | ✅ Pass |
-| 2   | research:business:create_patient | 09:16:45  | Click Create | 1     | ✅ Pass |
-| 3   | ...                              | ...       | ...          | ...   | ...     |
+| #   | Event Name                                 | Triggered By | Expected | Captured | Status        |
+| --- | ------------------------------------------ | ------------ | -------- | -------- | ------------- |
+| 1   | research:other:view_patient_list           | Page load    | 1        | 1        | ✅ Pass       |
+| 2   | research:business:create_patient_attempt   | Click Create | 1        | 1        | ✅ Pass       |
+| 3   | research:business:create_patient_succeeded | API success  | 1        | 1        | ✅ Pass       |
+| 4   | research:business:create_patient_failed    | API error    | 1        | 0        | ⏭️ Not tested |
 
-## Raw Logs
+## Raw Logs (Full JSON)
 
 ```json
-[captured logs here]
+[
+  {
+    "eventName": "research:other:view_patient_list",
+    "time": "2026-01-28T09:15:23.456Z",
+    "description": {
+      "data": {
+        "researchId": "abc-123"
+      }
+    }
+  },
+  {
+    "eventName": "research:business:create_patient_attempt",
+    "time": "2026-01-28T09:16:45.123Z",
+    "description": {
+      "data": {
+        "patientId": "P001",
+        "researchId": "abc-123"
+      }
+    }
+  }
+]
 ```
+
+## Payload Verification
+
+| Event                  | Expected Payload Fields | Captured Fields                          | Match |
+| ---------------------- | ----------------------- | ---------------------------------------- | ----- |
+| view_patient_list      | researchId              | researchId: "abc-123"                    | ✅    |
+| create_patient_attempt | patientId, researchId   | patientId: "P001", researchId: "abc-123" | ✅    |
 
 ## Issues Found
 
-- [List any issues: duplicates, missing events, wrong payloads]
+- [List any issues: duplicates, missing events, wrong payloads, missing payload fields]
+- If `_failed` events were not tested, note: "Failed events not tested - requires simulated API failure"
 
 ## Phase 1 Result: ✅ PASS / ❌ FAIL
 ````
@@ -366,6 +389,18 @@ Complete event verification requires 3 phases. Use arguments to run specific pha
 
 **Report Format (Phase 2):**
 
+> **📋 REPORT REQUIREMENTS:**
+>
+> 1. **Complete Three-Phase Coverage** - For each CRUD operation, list ALL three phases:
+>    - `_attempt` - The "尝试" / "Attempting" event
+>    - `_succeeded` - The "成功" / "Success" event
+>    - `_failed` - The "失败" / "Failed" event
+> 2. **Explicit Status for Each Phase:**
+>    - ✅ Pass - Event found and translation correct
+>    - ❌ Fail - Event missing or translation wrong
+>    - ⏭️ Not tested - Event requires specific conditions (e.g., API error) that were not simulated
+> 3. **If an event was NOT tested**, you MUST explain why (e.g., "Requires simulated API failure")
+
 ```markdown
 # Event Testing Report - Phase 2 (Backend Integration)
 
@@ -382,16 +417,53 @@ Complete event verification requires 3 phases. Use arguments to run specific pha
 
 ## Events Verification
 
+### Simple View Events
+
 | #   | Event Name        | Expected Translation | Displayed Translation | Time  | Status  |
 | --- | ----------------- | -------------------- | --------------------- | ----- | ------- |
 | 1   | view_patient_list | 查看患者列表         | 查看患者列表          | 09:15 | ✅ Pass |
-| 2   | create_patient    | 创建患者             | 创建患者              | 09:16 | ✅ Pass |
-| 3   | ...               | ...                  | ...                   | ...   | ...     |
+
+### Three-Phase CRUD Events
+
+> **⚠️ For each CRUD operation, verify ALL three phases:**
+
+#### CREATE Operation
+
+| Phase   | Event Suffix             | Expected Translation | Displayed Translation       | Time     | Status        |
+| ------- | ------------------------ | -------------------- | --------------------------- | -------- | ------------- |
+| Attempt | create_patient_attempt   | 创建患者档案         | 用户尝试创建患者档案 "P001" | 09:16:01 | ✅ Pass       |
+| Success | create_patient_succeeded | 创建患者档案成功     | 患者档案 "P001" 创建成功    | 09:16:02 | ✅ Pass       |
+| Failed  | create_patient_failed    | 创建患者档案失败     | -                           | -        | ⏭️ Not tested |
+
+> **Note on Failed Events:** failed events require API errors to trigger. If not tested, state: "Not tested - requires simulated API failure or network error."
+
+#### UPDATE Operation
+
+| Phase   | Event Suffix         | Expected Translation | Displayed Translation | Time | Status        |
+| ------- | -------------------- | -------------------- | --------------------- | ---- | ------------- |
+| Attempt | update_xxx_attempt   | ...                  | ...                   | ...  | ...           |
+| Success | update_xxx_succeeded | ...                  | ...                   | ...  | ...           |
+| Failed  | update_xxx_failed    | ...                  | ...                   | ...  | ⏭️ Not tested |
+
+#### DELETE Operation
+
+| Phase   | Event Suffix         | Expected Translation | Displayed Translation | Time | Status        |
+| ------- | -------------------- | -------------------- | --------------------- | ---- | ------------- |
+| Attempt | delete_xxx_attempt   | ...                  | ...                   | ...  | ...           |
+| Success | delete_xxx_succeeded | ...                  | ...                   | ...  | ...           |
+| Failed  | delete_xxx_failed    | ...                  | ...                   | ...  | ⏭️ Not tested |
 
 ## Screenshot
 
-(Optional, unless users explicitly require)
 [Attach screenshot of admin events table with filters applied]
+
+## Untested Events Summary
+
+| Event                 | Reason Not Tested              |
+| --------------------- | ------------------------------ |
+| create_patient_failed | Requires simulated API failure |
+| update_xxx_failed     | Requires simulated API failure |
+| delete_xxx_failed     | Requires simulated API failure |
 
 ## Issues Found
 
