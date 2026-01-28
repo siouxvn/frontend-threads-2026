@@ -8,6 +8,13 @@ version: 1.0.0
 
 This skill is for **creating or updating tracking events** in JnJ projects, ensuring all events strictly follow the agreed-upon **event conventions, best practices, and patterns**.
 
+## Arguments
+
+- **default** (no argument needed): Execute the full workflow process (steps 1-6)
+- **plan**: Execute planning phase only (steps 1-4) - analyze requirements, determine events, audit implementation, and produce event capture report
+- **impl**: Execute implementation phase only (step 5) - check context for existing report or proposed design from step 4; if not found, ask user for clarification
+- **test**: Execute testing phase only (step 6) - review context to determine what needs to be tested; if unclear, ask user for clarification
+
 ## When to Use
 
 Use this agent when:

@@ -1,272 +1,366 @@
-## Key Conventions & Guidelines
+# Event Best Practices
 
-### 1. Event Type Conventions
+This guide helps you determine **which events to track** and **which to avoid**. Focus on conceptual decisions, not implementation details (see `event-patterns.md` for implementation).
 
-When defining events, use the correct `EventType` based on the event's purpose:
+---
 
-| Event Category        | EventType  | Example Event Name                      |
-| --------------------- | ---------- | --------------------------------------- |
-| View/Page Load events | `Other`    | `research:other:view_patient_list`      |
-| CRUD operations       | `Business` | `research:business:create_patient`      |
-| User interactions     | `Business` | `research:business:toggle_privacy_mode` |
-| Data import/export    | `DataIO`   | `surgery:data_io:export_video`          |
-| Authentication        | `Auth`     | `auth:auth:login`                       |
+## Quick Decision Framework
 
-**Important:** View events (tracking page loads) should use `EventType.Other`, **not** `EventType.Business`.
+Use this flowchart to decide whether to create an event:
 
-### 2. Navigation Events vs View Events
+```
+┌────────────────────────────────────────────────────────────────┐
+│                    USER ACTION OCCURRED                        │
+└────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+            ┌─────────────────────────────────┐
+            │ Does it provide business value  │
+            │ to know this action happened?   │
+            └─────────────────────────────────┘
+                    │               │
+                   YES              NO ──────► DO NOT TRACK
+                    │
+                    ▼
+            ┌─────────────────────────────────┐
+            │ Is it a navigation action       │
+            │ (clicking link/button to go     │
+            │ to another page)?               │
+            └─────────────────────────────────┘
+                    │               │
+                   YES              NO
+                    │               │
+                    ▼               ▼
+         Track VIEW event      Continue below
+         in DESTINATION        (track at source)
+         page instead
+                                    │
+                                    ▼
+            ┌─────────────────────────────────┐
+            │ Does it trigger an async        │
+            │ operation (API call/query)?     │
+            └─────────────────────────────────┘
+                    │               │
+                   YES              NO
+                    │               │
+                    ▼               ▼
+            Use Three-Phase    Use Simple Capture
+            CRUD Pattern       Pattern
+```
 
-**Do NOT create navigation events** (e.g., "user clicked to navigate to X").
+---
 
-**DO create View events** in the destination component/page.
+## ✅ Events You SHOULD Track
 
-| ❌ Wrong Approach                                                  | ✅ Correct Approach                                             |
-| ------------------------------------------------------------------ | --------------------------------------------------------------- |
-| Track `NAVIGATE_TO_PATIENT_DETAIL` when user clicks Edit button    | Track `VIEW_PATIENT_DETAIL` in `UpsertPatient.tsx` on page load |
-| Track `NAVIGATE_TO_DASHBOARD` when user clicks Dashboard menu item | Track `VIEW_DASHBOARD` in `Dashboard.tsx` on page load          |
+### 1. Page/View Events
+
+Track when a user **successfully views** a page or major section.
+
+| Event Type   | Example               | Why Track                                   |
+| ------------ | --------------------- | ------------------------------------------- |
+| Page load    | `VIEW_DASHBOARD`      | Know which pages are most visited           |
+| Detail view  | `VIEW_PATIENT_DETAIL` | Track user engagement with specific records |
+| Section view | `VIEW_REPORT`         | Understand feature usage                    |
+
+**Rules:**
+
+- Track in the **destination** component, not when clicking to navigate
+- Use `EventType.Other` (not `Business`)
+- Include relevant context (e.g., `researchId`, `patientId`)
+
+### 2. CRUD Operations
+
+Track Create, Read, Update, Delete operations that **persist data**.
+
+| Operation | Example                               | Pattern          |
+| --------- | ------------------------------------- | ---------------- |
+| Create    | `CREATE_PATIENT`, `CREATE_DEPARTMENT` | Three-Phase CRUD |
+| Update    | `UPDATE_SURGERY_INFO`, `RENAME_VIDEO` | Three-Phase CRUD |
+| Delete    | `DELETE_SURGERY`, `DELETE_SCREENSHOT` | Three-Phase CRUD |
+
+**Rules:**
+
+- Always use Three-Phase pattern (attempt → succeeded → failed)
+- Track the entity ID and relevant metadata
+- Include error details on failure
+
+### 3. Data Import/Export
+
+Track when users move data in or out of the system.
+
+| Operation | Example                | Why Track                     |
+| --------- | ---------------------- | ----------------------------- |
+| Export    | `EXPORT_SURGERY_VIDEO` | Know what data users extract  |
+| Import    | `IMPORT_MONARCH_DATA`  | Track data ingestion patterns |
+
+**Rules:**
+
+- Use `EventType.DataIO`
+- Use Three-Phase pattern (can fail)
+- Include file type, size if available
+
+### 4. Significant User Interactions
+
+Track interactions that **change the user's experience** or indicate intent.
+
+| Interaction    | Example               | Why Track                        |
+| -------------- | --------------------- | -------------------------------- |
+| Toggle feature | `TOGGLE_PRIVACY_MODE` | Know feature adoption            |
+| Filter data    | `FILTER_PATIENT_LIST` | Understand search patterns       |
+| Play media     | `PLAY_VIDEO`          | Track content engagement         |
+| Select items   | `SELECT_ALL_PATIENTS` | Understand batch operation usage |
+
+**Rules:**
+
+- Only track if it provides actionable insights
+- Include the state change (e.g., `isEnabled: true/false`)
+
+### 5. Authentication Events
+
+Track user session lifecycle.
+
+| Event          | Example           |
+| -------------- | ----------------- |
+| Login          | `LOGIN`           |
+| Logout         | `LOGOUT`          |
+| Session expire | `SESSION_EXPIRED` |
+
+---
+
+## ❌ Events You Should NOT Track
+
+### 1. Navigation Events (Anti-pattern)
+
+**❌ DON'T:** Track "user clicked to go to X"
+
+```typescript
+// ❌ WRONG - Don't do this
+onClick={() => {
+  eventTracker.capture({ name: 'NAVIGATE_TO_PATIENT_DETAIL' });
+  navigate('/patient/123');
+}}
+```
+
+**✅ DO:** Track View event in destination page
+
+```typescript
+// ✅ CORRECT - In PatientDetail.tsx
+useEffect(() => {
+  eventTracker.capture({ name: 'VIEW_PATIENT_DETAIL' });
+}, []);
+```
 
 **Why?**
 
-- Navigation can fail (user cancels, network error, etc.)
-- The destination page is the source of truth for "user viewed X"
-- Simpler and more accurate tracking
+- Navigation can fail (network error, auth redirect, user cancels)
+- You'll get duplicate data (click + view)
+- Destination page is the source of truth
 
-### 3. When to Use Three-Phase CRUD Pattern
+### 2. Every Button Click
 
-Use **Three-Phase CRUD** (attempt → succeeded → failed) when the user action triggers an **async operation** that can succeed or fail.
+**❌ DON'T:** Track every UI interaction without business purpose
 
-| User Action                   | Triggers Async Operation? | Pattern              |
-| ----------------------------- | ------------------------- | -------------------- |
-| User applies filter           | Yes (query is triggered)  | **Three-Phase CRUD** |
-| User clicks "Create" button   | Yes (API call)            | **Three-Phase CRUD** |
-| User toggles a switch         | No (local state only)     | Simple Capture       |
-| User navigates to a page      | No                        | Simple View Event    |
-| User selects items in a table | No (local state only)     | Simple Capture       |
+```typescript
+// ❌ WRONG - No business value
+eventTracker.capture({ name: 'CLICK_SUBMIT_BUTTON' });
+eventTracker.capture({ name: 'CLICK_CANCEL_BUTTON' });
+eventTracker.capture({ name: 'HOVER_MENU_ITEM' });
+```
 
-**Key insight:** If the action immediately triggers an API call or query (even a GET request like filtering), use Three-Phase CRUD to properly track success/failure states.
+**✅ DO:** Track the meaningful outcome instead
 
----
+```typescript
+// ✅ CORRECT - Track what the button did
+eventTracker.attempt({ name: 'CREATE_PATIENT' });
+```
 
-## Complete File Inventory
+### 3. Form Field Changes
 
-#### **Group 2: Admin Module**
+**❌ DON'T:** Track every keystroke or field change
 
-##### src/app/admin/pages/user/EditUserPage.tsx
+```typescript
+// ❌ WRONG - Too granular
+onChange={e => {
+  eventTracker.capture({ name: 'CHANGE_PATIENT_NAME', data: e.target.value });
+}}
+```
 
-- **Pattern:** Update operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** UPDATE_USER
-- **Tracked:** User ID being updated
+**✅ DO:** Track when form is submitted
 
-##### src/app/admin/pages/user/useUserCreation.tsx
+```typescript
+// ✅ CORRECT - Track the submission
+onSubmit={() => {
+  eventTracker.attempt({ name: 'UPDATE_PATIENT_INFO' });
+}}
+```
 
-- **Pattern:** Create operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** CREATE_USER
-- **Tracked:** Username, department
+### 4. UI State Changes (No Persistence)
 
-##### src/app/admin/pages/user/UserManagerPage.tsx
+**❌ DON'T:** Track temporary UI states
 
-- **Pattern:** Status update
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** UPDATE_USER_STATUS
-- **Tracked:** User ID, new status
+```typescript
+// ❌ WRONG - No business value
+eventTracker.capture({ name: 'OPEN_DROPDOWN' });
+eventTracker.capture({ name: 'CLOSE_MODAL' });
+eventTracker.capture({ name: 'EXPAND_ACCORDION' });
+```
 
-##### src/app/admin/pages/department/useDepartmentCreation.tsx
+**Exception:** Track if the state change is a meaningful feature toggle (e.g., `TOGGLE_PRIVACY_MODE`)
 
-- **Pattern:** Create operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** CREATE_DEPARTMENT
-- **Tracked:** Department name
+### 5. Automatic/System Events
 
-##### src/app/admin/pages/department/useDepartmentDeletion.tsx
+**❌ DON'T:** Track things triggered automatically without user action
 
-- **Pattern:** Delete operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** DELETE_DEPARTMENT
-- **Tracked:** Department ID
+```typescript
+// ❌ WRONG - Not user-initiated
+useEffect(() => {
+  eventTracker.capture({ name: 'DATA_LOADED' }); // Auto-triggered
+}, [data]);
+```
 
-##### src/app/admin/pages/surgeryType/useSurgeryTypeCreation.tsx
-
-- **Pattern:** Create operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** CREATE_SURGERY_TYPE
-- **Tracked:** Type name, department ID
-
-##### src/app/admin/pages/surgeryType/useSurgeryTypeDeletion.tsx
-
-- **Pattern:** Delete operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** DELETE_SURGERY_TYPE
-- **Tracked:** Type ID
+**Exception:** Track system events that have business meaning (e.g., `SESSION_EXPIRED`)
 
 ---
 
-#### **Group 3: Dashboard**
+## Event Naming Conventions
 
-##### src/app/dashboard/Dashboard.tsx
+### Format
 
-- **Line:** 15
-- **Pattern:** View event
-- **Call:** `eventTracker.capture({ name: events.VIEW_DASHBOARD })`
-- **Event:** VIEW_DASHBOARD
+```
+module:type:action_entity
+```
 
----
+### Modules
 
-#### **Group 4: Research**
+| Module      | Description              | Example                            |
+| ----------- | ------------------------ | ---------------------------------- |
+| `research`  | Research center features | `research:business:create_patient` |
+| `surgery`   | Surgery center features  | `surgery:data_io:export_video`     |
+| `admin`     | Admin panel features     | `admin:business:create_user`       |
+| `dashboard` | Dashboard features       | `dashboard:other:view_dashboard`   |
+| `auth`      | Authentication           | `auth:auth:login`                  |
 
-##### src/app/researchCenter/pages/MyResearch.tsx
+### Types
 
-- **Line:** 35
-- **Pattern:** View event
-- **Call:** `eventTracker.capture({ name: events.VIEW_MY_RESEARCH })`
-- **Event:** VIEW_MY_RESEARCH
+| Type       | When to Use              | Example                            |
+| ---------- | ------------------------ | ---------------------------------- |
+| `Other`    | View/page load events    | `research:other:view_patient_list` |
+| `Business` | CRUD, user interactions  | `research:business:create_patient` |
+| `DataIO`   | Import/export operations | `surgery:data_io:export_video`     |
+| `Auth`     | Authentication events    | `auth:auth:login`                  |
 
----
+### Action Naming
 
-#### **Group 5: Surgery Center**
+Use `action_entity` format:
 
-##### Export Operations
+```
+✅ view_patient_list      (view + entity)
+✅ create_patient         (action + entity)
+✅ toggle_privacy_mode    (action + feature)
+✅ filter_patient_list    (action + target)
+✅ export_surgery_video   (action + entity)
 
-**src/app/surgeryCenter/components/ExportButton.hub.tsx**
-
-- **Pattern:** Export operation (2 triplets)
-- **Calls:** 5 (attempt × 2, succeeded × 2, failed × 1)
-- **Events:** EXPORT_SURGERY_VIDEO, EXPORT_SURGERY_SCREENSHOT
-
-**src/app/surgeryCenter/components/ExportButton.remote.tsx**
-
-- **Pattern:** Export operation (2 triplets)
-- **Calls:** 7 (attempt × 2, succeeded × 2, failed × 3)
-- **Events:** EXPORT_SURGERY_VIDEO, EXPORT_SURGERY_SCREENSHOT
-- **Extra:** Poll-based retry logic
-
-##### Import Operations
-
-**src/app/surgeryCenter/components/import/ImportProvider.hub.tsx**
-
-- **Pattern:** Import operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** IMPORT_MONARCH_DATA
-
-**src/app/surgeryCenter/components/import/ImportProvider.remote.tsx**
-
-- **Pattern:** Import operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** IMPORT_MONARCH_DATA
-
-##### Surgery Info & Editing
-
-**src/app/surgeryCenter/pages/SurgeryInfo.tsx**
-
-- **Pattern:** View event
-- **Call:** 1
-- **Event:** VIEW_INFORMATION
-
-**src/app/surgeryCenter/pages/SurgeryInfo/useEditForm.ts**
-
-- **Pattern:** Update operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** UPDATE_SURGERY_INFO
-- **Tracked:** Surgery ID, fields changed
-
-**src/app/surgeryCenter/pages/SurgeryInfo/useDelete.tsx**
-
-- **Pattern:** Delete operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** DELETE_SURGERY
-- **Tracked:** Surgery ID
-
-**src/app/surgeryCenter/pages/report/SurgeryReport.tsx**
-
-- **Pattern:** View + Update
-- **Calls:** 4 (1 view, 3 update)
-- **Events:** VIEW_REPORT, UPDATE_REPORT
-
-**src/app/surgeryCenter/pages/SurgeryResources.tsx**
-
-- **Pattern:** View event
-- **Call:** 1
-- **Event:** VIEW_RESOURCES
-
-##### File Management Operations
-
-**src/app/surgeryCenter/components/VideoGrid/useDeleteVideos.tsx**
-
-- **Pattern:** Delete operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** DELETE_SURGERY_VIDEO
-- **Tracked:** Video ID
-
-**src/app/surgeryCenter/components/ScreenshotGrid/useDeleteScreenshots.tsx**
-
-- **Pattern:** Delete operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** DELETE_SURGERY_SCREENSHOT
-- **Tracked:** Screenshot ID
-
-**src/app/surgeryCenter/components/VideoDraftList/useDeleteVideoDrafts.tsx**
-
-- **Pattern:** Delete operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** DELETE_VIDEO_DRAFT
-- **Tracked:** Draft ID
-
-**src/app/surgeryCenter/components/VideoGrid/useRenameVideos.tsx**
-
-- **Pattern:** Update operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** RENAME_SURGERY_VIDEO
-- **Tracked:** Video ID, new name
-
-**src/app/surgeryCenter/components/ScreenshotGrid/useRenameScreenshots.tsx**
-
-- **Pattern:** Update operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** RENAME_SURGERY_SCREENSHOT
-- **Tracked:** Screenshot ID, new name
-
-**src/app/surgeryCenter/components/VideoDraftList/useRenameVideoDraft.tsx**
-
-- **Pattern:** Update operation
-- **Calls:** 3 (attempt, succeeded, failed)
-- **Event:** RENAME_VIDEO_DRAFT
-- **Tracked:** Draft ID, new name
-
-##### Video Draft Operations
-
-**src/app/surgeryCenter/components/VideoDraftList/DraftVideoItem.tsx**
-
-- **Pattern:** Create event
-- **Calls:** 2
-- **Event:** CREATE_VIDEO_DRAFT
-- **Tracked:** Draft name
-
-**src/app/surgeryCenter/pages/VideoEditPage.tsx**
-
-- **Pattern:** Generate operation (2 triplets)
-- **Calls:** 6 (attempt × 2, succeeded × 2, failed × 2)
-- **Event:** GENERATE_VIDEO_DRAFT
-- **Tracked:** Draft ID, video name
+❌ patient_list_view      (wrong order)
+❌ patientCreate          (camelCase not allowed)
+❌ click_button           (too generic)
+```
 
 ---
 
-#### **Group 6: Surgery Resources**
+## Payload Guidelines
 
-##### src/app/surgeryResources/components/VideoItem.tsx
+### What to Include
 
-- **Line:** 95
-- **Pattern:** Play event
-- **Call:** `eventTracker.capture({ name: createPlayVideoEvent('hub') })`
-- **Event:** hub:business:play_video
-- **Tracked:** Surgery ID, video ID, type, play mode
+| Always Include                    | Sometimes Include      | Never Include        |
+| --------------------------------- | ---------------------- | -------------------- |
+| Entity IDs (patientId, surgeryId) | Operation metadata     | Sensitive PII        |
+| User context (from system)        | Filter/search criteria | Passwords            |
+| Timestamp (automatic)             | Result counts          | Full response bodies |
+| Action result (success/fail)      | Error codes/messages   | Large data blobs     |
 
-##### src/app/surgeryResources/components/ViewVideos.tsx
+### Example Payloads
 
-- **Lines:** 98, 144
-- **Pattern:** Play events (2 different modes)
-- **Calls:** 2
-- **Events:** hub:business:play_video (2 times)
-- **Tracked:** Video metadata per play mode
+```typescript
+// View event - minimal context
+{
+  name: 'research:other:view_patient_detail',
+  description: {
+    data: {
+      patientId: '123',
+      researchId: '456'
+    }
+  }
+}
+
+// CRUD event - include operation details
+{
+  name: 'research:business:create_patient',
+  description: {
+    data: {
+      patientId: '123',
+      researchId: '456'
+    }
+  },
+  payload: {
+    surgeryType: 'knee_replacement'
+  }
+}
+
+// Error event - include error details
+{
+  name: 'research:business:create_patient',
+  error: {
+    code: '400',
+    message: 'Patient already exists'
+  }
+}
+```
 
 ---
+
+## Decision Checklist
+
+Before creating a new event, answer these questions:
+
+- [ ] **Business value**: Will this data help make product decisions?
+- [ ] **Not navigation**: Am I tracking a view, not a click-to-navigate?
+- [ ] **Right granularity**: Am I tracking outcomes, not every interaction?
+- [ ] **Correct type**: Am I using the right EventType?
+- [ ] **Correct pattern**: Three-Phase for async, Simple for sync?
+- [ ] **Proper naming**: Does it follow `module:type:action_entity`?
+- [ ] **Minimal payload**: Am I only including necessary data?
+
+---
+
+## Reference: Existing Events by Category
+
+For implementation examples, refer to these existing events:
+
+### View Events
+
+- `VIEW_DASHBOARD` - Dashboard.tsx
+- `VIEW_MY_RESEARCH` - MyResearch.tsx
+- `VIEW_PATIENT_LIST` - PatientList.tsx
+- `VIEW_PATIENT_DETAIL` - UpsertPatient.tsx
+- `VIEW_INFORMATION` - SurgeryInfo.tsx
+- `VIEW_REPORT` - SurgeryReport.tsx
+- `VIEW_RESOURCES` - SurgeryResources.tsx
+
+### CRUD Events (Three-Phase)
+
+- `CREATE_PATIENT`, `CREATE_USER`, `CREATE_DEPARTMENT`, `CREATE_SURGERY_TYPE`
+- `UPDATE_USER`, `UPDATE_USER_STATUS`, `UPDATE_SURGERY_INFO`, `UPDATE_REPORT`
+- `DELETE_SURGERY`, `DELETE_DEPARTMENT`, `DELETE_SURGERY_TYPE`
+- `RENAME_SURGERY_VIDEO`, `RENAME_SURGERY_SCREENSHOT`, `RENAME_VIDEO_DRAFT`
+
+### Data I/O Events
+
+- `EXPORT_SURGERY_VIDEO`, `EXPORT_SURGERY_SCREENSHOT`
+- `IMPORT_MONARCH_DATA`
+
+### Interaction Events
+
+- `TOGGLE_PRIVACY_MODE` - PatientList.tsx
+- `FILTER_PATIENT_LIST` - useAggregatedPatients.tsx
+- `SELECT_ALL_PATIENTS` - PatientList.tsx
+- `PLAY_VIDEO` - VideoItem.tsx, ViewVideos.tsx
