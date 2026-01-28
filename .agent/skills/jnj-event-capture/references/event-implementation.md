@@ -36,6 +36,13 @@ export const events = {
 }
 ```
 
+> ⚠️ **CRITICAL: Do NOT include `{{error}}` in `_failed` translations!**
+>
+> The error details are stored and displayed separately by the admin event log UI. Including `{{error}}` in the translation description will result in broken/incorrect display like: `创建患者档案 "test_001" 失败: {{error}}`
+>
+> ✅ **Correct:** `"description": "项目 \"{{itemName}}\" 创建失败"`  
+> ❌ **Wrong:** `"description": "项目 \"{{itemName}}\" 创建失败: {{error}}"`
+
 ### Step 3: Implement Event Tracking
 
 Please refer to `references\event-patterns.md` to know common patterns in implementing events

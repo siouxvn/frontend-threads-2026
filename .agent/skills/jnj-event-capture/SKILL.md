@@ -100,39 +100,27 @@ Use this agent when:
    - Proceed only after the user approves the proposed design
    - Ensure implementation follows agreed conventions and patterns
 6. **Test and verify events**
-   - Use methods from `references/event-testing.md` to verify:
-     - Events fire exactly once (not duplicated)
-     - Events fire at the correct time
-     - Event payloads contain correct data
+   - See `references/event-testing.md` for detailed instructions
 
 ## Report Format (for Step 4)
 
-path: `specs/feature-name/events.report.md`
+**Template:** `references/event-report-template.md`
 
-```markdown
-# Event Capture Report
+**Output path:** `specs/{{feature-name}}/events.report.md`
 
-## Relevant Files
+The report template includes the following sections:
 
-- `path/to/file.ts` – Brief description of its role
-- `path/to/another-file.ts` – Brief description
-- ...
-
-## Event Table
-
-| Module | Type | Event Name | Pattern | Feature | Status           | Description | Payload |
-| ------ | ---- | ---------- | ------- | ------- | ---------------- | ----------- | ------- |
-| ...    | ...  | ...        | ...     | ...     | Exists / Missing | ...         | ...     |
-
-Notes:
-
-- **Status** indicates whether the event is already implemented.
-- **Payload** should be specified only when applicable.
-```
+1. **Relevant Files** - List of files involved in the feature
+2. **Event Table** - Summary table of all events with their patterns and status
+3. **Technical Design** - Detailed implementation code for each event
+4. **Event Definitions Update** - Code for the module's `events.ts` file
+5. **Translation Updates** - Chinese translations for `eventLog.json`
+6. **Notes** - Feature-specific notes and considerations
 
 ## References
 
 - `references/event-best-practices.md` - What events should or should not be created (conceptual)
 - `references/event-patterns.md` - How events should be implemented technically (implementation)
 - `references/event-implementation.md` - Step-by-step implementation guide
+- `references/event-report-template.md` - Template for creating event capture reports
 - `references/event-testing.md` - How to test and verify events are working correctly
