@@ -49,7 +49,7 @@ Use this skill when:
 
 **Load**: `references/test-file-structure.md`
 
-**Purpose**: Standardizes test organization, naming conventions, and the mandatory AAA pattern.
+**Purpose**: Essential for implementation; standardizes test organization, naming conventions, and the mandatory AAA pattern.
 
 ### 4. Component Testing Patterns
 
@@ -173,6 +173,7 @@ Before marking tests as complete, verify:
 - [ ] API tests use MSW handlers (except FormData uploads which use spy)
 - [ ] Component tests focus on user behavior, not implementation
 - [ ] Async code uses `vi.useFakeTimers` and `act()` where needed
+- [ ] Proper cleanup is performed in `afterEach` (e.g., `vi.clearAllMocks()`, `vi.useRealTimers()`)
 - [ ] No calls to `console.log` in tests (use proper assertions)
 - [ ] All tests pass without warnings
 
@@ -191,8 +192,14 @@ Before marking tests as complete, verify:
    - ✅ GOOD: `// arrange`, `// act`, `// assert` comments
 
 4. **Forgetting to cleanup timers/mocks**
-   - ❌ BAD: Not calling `vi.useRealTimers()` in `afterEach`
-   - ✅ GOOD: Proper cleanup in `beforeEach`/`afterEach`
+   - ❌ BAD: Not clearing mocks or timers, or doing it only in `beforeEach` (can lead to unexpected state for subsequent tests)
+   - ✅ GOOD: Prioritize `afterEach` for global cleanup to ensure a clean slate for the next test case.
+     ```typescript
+     afterEach(() => {
+       vi.clearAllMocks();
+       vi.useRealTimers();
+     });
+     ```
 
 5. **Using MSW for FormData uploads**
    - ❌ BAD: MSW handler for FormData (doesn't work in jsdom)

@@ -269,11 +269,43 @@ it('should handle race condition', async () => {
 
 ---
 
+## Lifecycle Hooks and Cleanup
+
+Use `beforeEach` for setup and **prioritize `afterEach` for cleanup** to ensure tests do not pollute each other.
+
+### 1. Setup with `beforeEach`
+
+Use this to initialize data or reset common state before each test if it's simpler than doing it in the Arrange block of every test.
+
+### 2. Cleanup with `afterEach` (CRITICAL)
+
+Always perform cleanup in `afterEach` to guarantee a clean environment for the following tests, regardless of whether the current test passed or failed.
+
+```typescript
+afterEach(() => {
+  // ✅ Clear mock call history and results
+  vi.clearAllMocks();
+  
+  // ✅ Restore real timers if fake timers were used
+  if (vi.isMockFunction(setTimeout)) {
+    vi.useRealTimers();
+  }
+});
+```
+
+### 3. Global Cleanup vs. Local Cleanup
+
+- **Global**: Common cleanup like `localStorage.clear()` is handled in `setupTests.ts`.
+- **Local**: File-specific mocks or timers created within a test file MUST be cleaned up within that same file's `afterEach`.
+
+---
+
 ## Summary
 
 - **Mirror `src/` structure** in `tests/` folder
 - **Use `.test.ts` / `.test.tsx`** file extension
 - **AAA pattern is MANDATORY** with block comments
 - **Organize with nested `describe` blocks**
+- **Prioritize cleanup in `afterEach`** (e.g., `vi.clearAllMocks()`)
 - **Name tests clearly** with "should + behavior + condition"
 - **Add explanatory comments** for complex tests
