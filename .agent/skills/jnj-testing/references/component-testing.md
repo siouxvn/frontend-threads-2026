@@ -481,6 +481,7 @@ it('should render with providers', () => {
 - Use `getByRole` as primary query method
 - Test user-visible behavior
 - Use `waitFor` for async updates
+- Use `it.each` for components with multiple rendering states (loading, error, empty)
 - Mock API calls with MSW
 - Keep tests focused on one behavior
 - Use `screen` instead of destructuring
@@ -493,6 +494,60 @@ it('should render with providers', () => {
 - Use `container.querySelector`
 - Test props passed to children
 - Use snapshots for behavioral tests
+
+---
+
+## Mocking Complex UI Components (e.g., Ant Design)
+
+In projects using Ant Design (especially version 5+ with ESM), component styles or internal submodules (like `theme/internal`) may cause resolution errors in JSDOM/Vitest. In such cases, **targeted mocking** of UI components is recommended.
+
+### 1. Mocking Philosophy for UI Libraries
+
+- **Simulate Semantic Output**: Replace complex components with simple HTML elements that have the same accessibility roles (`role="dialog"`, `role="combobox"`, etc.).
+- **Mirror the Prop API**: Ensure your mock accepts and correctly uses key props like `open`, `onOk`, `onChange`, and `loading`.
+- **Maintain Accessibility**: By using proper roles, you can still use `getByRole` and other semantic queries in your tests.
+
+### 2. Implementation Example (Modal & TreeSelect)
+
+```typescript
+vi.mock('@src/ui/components', async () => {
+  const { Form } = await import('antd'); // Import real logic if needed
+  
+  return {
+    Modal: ({ children, title, open, onOk, onCancel, okText, cancelText, okButtonProps }: ModalProps & { children?: ReactNode }) => {
+      // ✅ Respect visibility state
+      if (!open) return null;
+      
+      return (
+        <div role="dialog" aria-label={typeof title === 'string' ? title : undefined}>
+          <h1>{title}</h1>
+          {children}
+          <button type="button" onClick={onCancel as any}>{cancelText || 'Cancel'}</button>
+          <button type="button" onClick={onOk as any} disabled={okButtonProps?.disabled}>{okText || 'OK'}</button>
+        </div>
+      );
+    },
+    TreeSelect: ({ treeData, value, onChange, placeholder }: TreeSelectProps) => (
+      <div role="combobox" aria-label={typeof placeholder === 'string' ? placeholder : 'select'}>
+        <input readOnly value={(value as string) || ''} />
+        {treeData?.map(item => (
+          <div key={item.value as string} onClick={() => onChange?.(item.value, [item.label], {})}>
+            {item.label}
+          </div>
+        ))}
+      </div>
+    ),
+    // ✅ Bridge to real Antd if only styles are an issue for specific sub-components
+    FormItem: (props: FormItemProps) => <Form.Item {...props} />,
+  };
+});
+```
+
+### 3. Key Benefits
+
+- **Speed**: Tests run significantly faster by avoiding complex component rendering.
+- **Stability**: Prevents "module not found" or CSS-related crashes in the testing environment.
+- **Focus**: Keeps the test focused on YOUR component's logic rather than the UI library's internals.
 
 ---
 
