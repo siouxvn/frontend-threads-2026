@@ -107,6 +107,24 @@ Use this skill when:
 - Understand waitFor and act patterns
 - Know how to test debounced/throttled code
 
+### 9. XState Machine Testing
+
+**Load**: `references/xstate-machine-testing.md`
+
+**Purpose**:
+
+- **CRITICAL**: Learn how to test XState v5 machines using `createActor` + real events
+- Understand why testing static config objects is WRONG (anti-pattern)
+- Know how to inject controlled async actors (`fromPromise`) per test
+- Learn the `waitForState` polling helper pattern for async transitions
+- Know how to assert `snapshot.matches()`, `snapshot.hasTag()`, and `snapshot.context`
+
+**When to use:**
+
+- Testing factory functions that produce XState state node configs
+- Testing compound states with entry actions, guards, or async invocations
+- Testing that `tags` correctly reflect state (which drives UI behavior)
+
 ## Workflow Process
 
 1. **Analyze** the code to be tested
@@ -173,6 +191,9 @@ Before marking tests as complete, verify:
 - [ ] API tests use MSW handlers (except FormData uploads which use spy)
 - [ ] Component tests focus on user behavior, not implementation
 - [ ] Async code uses `vi.useFakeTimers` and `act()` where needed
+- [ ] **XState tests use `createActor` + real events — NEVER check static config object properties**
+- [ ] **XState tests always call `actor.stop()` after each test**
+- [ ] **XState async actors are injected via `fromPromise(fetchImpl)` in `provide()` — NOT mocked with MSW**
 - [ ] Proper cleanup is performed in `afterEach` (e.g., `vi.clearAllMocks()`, `vi.useRealTimers()`)
 - [ ] No calls to `console.log` in tests (use proper assertions)
 - [ ] All tests pass without warnings
@@ -204,6 +225,11 @@ Before marking tests as complete, verify:
 5. **Using MSW for FormData uploads**
    - ❌ BAD: MSW handler for FormData (doesn't work in jsdom)
    - ✅ GOOD: Spy on axios instance directly
+
+6. **Testing XState machine config instead of behavior**
+   - ❌ BAD: `expect(state.states.fetching.invoke.src).toBe('fetchUsbFolderStructures')`
+   - ✅ GOOD: Create a real actor, send events, assert `snapshot.matches()` and `snapshot.hasTag()`
+   - See `references/xstate-machine-testing.md` for complete patterns
 
 ---
 

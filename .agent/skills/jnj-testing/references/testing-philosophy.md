@@ -90,7 +90,8 @@ JnJ Monarch Hub follows the **Testing Trophy Model** (not the testing pyramid), 
    - React rendering mechanics
    - Antd component behavior
    - TanStack Router routing logic
-   - XState state machine transitions (already tested by library)
+   - XState library internals (trust the library's own test suite)
+   - ⚠️ **However, DO test your machine's business logic** (state tags, guards, entry actions, async transitions) using `createActor` — see `references/xstate-machine-testing.md`
 
 3. **Implementation details**
    - Internal component state variables
