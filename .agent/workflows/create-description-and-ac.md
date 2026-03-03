@@ -7,8 +7,8 @@ description: Create description and acceptance criteria
 
 Generate a `spec.md` file from user input that contains functional requirements following the formats demonstrated in these examples:
 
-- `examples/description-ac-e2e.md` - For UI/feature requirements
-- `examples/description-ac-apis.md` - For API requirements
+- `./examples/description-ac-e2e.md` - For UI/feature requirements
+- `./examples/description-ac-apis.md` - For API requirements
 
 ## Instructions
 
