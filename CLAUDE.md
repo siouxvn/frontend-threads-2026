@@ -67,6 +67,44 @@ Key modules:
 - `docs/public/mockServiceWorker.js` — MSW service worker (must stay here for browser mocking in demos)
 - Base path is configured for GitHub Pages subdirectory (`/frontend-threads-2026/`)
 
+### Thread Demo Convention
+
+Each thread's demos live under `docs/threads/demos/<thread-name>/`. When a thread compares multiple implementations of the same concept (e.g. stream patterns, auth strategies), follow this structure:
+
+```
+docs/threads/demos/<thread-name>/
+├── shared/
+│   ├── types.ts          # shared types and interfaces
+│   └── <Shell>.tsx       # shared UI shell component (boilerplate hidden from "Show Code")
+├── pattern1-foo.tsx      # focused demo: core logic only
+├── pattern2-bar.tsx
+└── ...
+```
+
+**Principle: "Show Code" should focus on the concept being taught, not UI boilerplate.**
+
+- Extract all UI state management, progress tracking, event handlers, and rendering into a shared shell component under `shared/`.
+- Each pattern file imports and renders the shell, exposing only the concept-specific logic.
+- Always set `defaultShowCode: false` explicitly in each demo's frontmatter comment — Dumi may default to showing code when the field is absent.
+
+```tsx
+/**
+ * title: Pattern N — Name
+ * description: One-line summary of what makes this pattern distinct.
+ * defaultShowCode: false
+ */
+import { Shell } from './shared/Shell';
+import type { CoreFn } from './shared/types';
+
+const coreFn: CoreFn = async (/* ... */) => {
+  // ← only the interesting logic lives here
+};
+
+export default function PatternN() {
+  return <Shell fn={coreFn} />;
+}
+```
+
 ### TypeScript Path Aliases
 
 - `@/*` → `src/*`
