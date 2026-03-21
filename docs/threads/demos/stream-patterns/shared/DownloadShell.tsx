@@ -1,5 +1,6 @@
 import { Button, Progress, Space, Tag, Typography } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
+
 import type { DownloadFn, PhaseEntry, Status } from './types';
 
 const { Text } = Typography;
@@ -19,7 +20,11 @@ interface Props {
   fileName?: string;
 }
 
-export function DownloadShell({ downloader, fileUrl, fileName = 'download' }: Props) {
+export function DownloadShell({
+  downloader,
+  fileUrl,
+  fileName = 'download',
+}: Props) {
   const [status, setStatus] = useState<Status>('idle');
   const [received, setReceived] = useState(0);
   const [total, setTotal] = useState(0);
@@ -48,7 +53,8 @@ export function DownloadShell({ downloader, fileUrl, fileName = 'download' }: Pr
     speedBuf.current.push({ t: now, b: bytes });
     speedBuf.current = speedBuf.current.filter((e) => now - e.t < 500);
     const totalB = speedBuf.current.reduce((s, e) => s + e.b, 0);
-    const elapsedMs = speedBuf.current.length > 1 ? now - speedBuf.current[0].t : 1;
+    const elapsedMs =
+      speedBuf.current.length > 1 ? now - speedBuf.current[0].t : 1;
     setSpeed((totalB / elapsedMs) * (1000 / 1_048_576));
     setReceived((r) => r + bytes);
   }
@@ -88,7 +94,9 @@ export function DownloadShell({ downloader, fileUrl, fileName = 'download' }: Pr
         setStatus('cancelled');
       } else {
         setBlobUrl(URL.createObjectURL(blob));
-        addPhase(`Done — ${(blob.size / 1_048_576).toFixed(1)} MB ready to save`);
+        addPhase(
+          `Done — ${(blob.size / 1_048_576).toFixed(1)} MB ready to save`,
+        );
         setStatus('done');
       }
     } catch (e: any) {
@@ -141,12 +149,17 @@ export function DownloadShell({ downloader, fileUrl, fileName = 'download' }: Pr
           <Progress
             percent={pct}
             status={
-              status === 'error' ? 'exception' : status === 'done' ? 'success' : 'active'
+              status === 'error'
+                ? 'exception'
+                : status === 'done'
+                ? 'success'
+                : 'active'
             }
           />
           <Text type="secondary">
-            {(received / 1_048_576).toFixed(1)} MB / {(total / 1_048_576).toFixed(1)} MB
-            &nbsp;|&nbsp; {speed.toFixed(1)} MB/s
+            {(received / 1_048_576).toFixed(1)} MB /{' '}
+            {(total / 1_048_576).toFixed(1)} MB &nbsp;|&nbsp; {speed.toFixed(1)}{' '}
+            MB/s
           </Text>
         </Space>
       )}
@@ -173,7 +186,9 @@ export function DownloadShell({ downloader, fileUrl, fileName = 'download' }: Pr
 
       {blobUrl && (
         <a href={blobUrl} download={fileName}>
-          <Button type="primary">Save file ({(received / 1_048_576).toFixed(0)} MB)</Button>
+          <Button type="primary">
+            Save file ({(received / 1_048_576).toFixed(0)} MB)
+          </Button>
         </a>
       )}
     </Space>
