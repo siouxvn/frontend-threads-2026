@@ -38,6 +38,25 @@ src/                                tests/
 - **NOT**: `{filename}.spec.ts` (incorrect pattern in this project)
 - **Module folders**: Match source exactly (e.g., `apis/surgery/` not `apis/`)
 
+### Per-function folder split
+
+When a source file exports **multiple functions** and each has a substantial number of tests, split them into separate test files under a subdirectory named after the source file (without extension):
+
+```
+src/
+└── utils/
+    └── select-search-schema-processor.ts  ← exports enrichSelectSearchOptionsMap, injectSelectSearchCallbacks
+
+tests/
+└── utils/
+    └── select-search-saved-values-pipeline/    ← folder named after the logical group (or source file)
+        ├── enrichSelectSearchOptionsMap.test.ts
+        ├── injectSelectSearchCallbacks.test.ts
+        └── pipeline-integration.test.ts        ← cross-function integration scenarios
+```
+
+**Rule:** Each file name is the function name → the outer `describe` in the file should be the **feature/behavior**, NOT the function name (the file already provides that context).
+
 ### Examples
 
 | Source File                                        | Test File                                                 |
@@ -46,6 +65,62 @@ src/                                tests/
 | `src/ui/hooks/useDebouncedValue.ts`                | `tests/ui/hooks/useDebouncedValue.test.ts`                |
 | `src/ui/components/form/input/FormInput.tsx`       | `tests/ui/components/form/input/FormInput.test.tsx`       |
 | `src/routes/authentication.tsx`                    | `tests/routes/authentication.test.tsx`                    |
+
+---
+
+## Test Constants Pattern
+
+For connected components that call APIs, centralize test fixture IDs and computed URL strings at the top of the file.
+
+```typescript
+import { userTokenRequiredApi } from '@src/infrastructure/net';
+import { RESEARCH_ENDPOINTS } from '@src/app/researchCenter/apis/research/endpoints';
+import { USER_TOKEN_ENDPOINTS } from '@src/app/auth/apis/userToken/endpoints';
+
+// Fixture IDs — single source of truth for all test data
+const TEST_IDS = {
+  researchId: 'r-1',
+  recordId: 'rec-1',
+  userId: 'u-1',
+} as const;
+
+// Derived API URLs — computed once, reused in MSW handlers
+const baseURL = userTokenRequiredApi.defaults.baseURL as string;
+const API_URLS = {
+  patientRecord: baseURL + RESEARCH_ENDPOINTS.getPatientRecord(TEST_IDS.researchId, TEST_IDS.recordId),
+  userProfile: baseURL + USER_TOKEN_ENDPOINTS.profile(TEST_IDS.userId),
+} as const;
+```
+
+**Rule:** Never hard-code URL strings or test IDs inline inside `server.use()` handlers — always reference `API_URLS` and `TEST_IDS`.
+
+---
+
+## SELECTORS + testHelpers Pattern
+
+For component tests, centralize `data-testid` strings and common query/action helpers to avoid magic strings scattered across tests.
+
+```typescript
+// Centralized data-testid strings — prevents magic string duplication
+const SELECTORS = {
+  downloadButton: 'download-button',
+  modal: 'usb-modal',
+  modalOk: 'modal-ok',
+  modalCancel: 'modal-cancel',
+} as const;
+
+// Reusable query/action/wait helpers
+const testHelpers = {
+  getDownloadButton: () => screen.getByTestId(SELECTORS.downloadButton),
+  clickDownloadButton: async () => await userEvent.click(testHelpers.getDownloadButton()),
+  getModal: () => screen.getByTestId(SELECTORS.modal),
+  queryModal: () => screen.queryByTestId(SELECTORS.modal),
+  waitForModalClosed: async () => await waitFor(() => expect(testHelpers.queryModal()).toBeNull()),
+  clickOk: async () => await userEvent.click(screen.getByTestId(SELECTORS.modalOk)),
+};
+```
+
+**Rule:** `SELECTORS` holds raw strings `as const`; `testHelpers` holds functions that use `SELECTORS`. Never access `screen.getByTestId('...')` in test bodies with inline strings.
 
 ---
 
@@ -100,82 +175,206 @@ Check that the result matches expectations.
 expect(mockFn).toHaveBeenCalledWith(mockData);
 expect(screen.getByText('Success')).toBeInTheDocument();
 ```
+
 ---
 
 ## Nested Describe Blocks
 
 Use nested `describe` blocks to organize related tests hierarchically.
 
-### Pattern
+### File-per-function rule
+
+When a test file is dedicated to a single function (e.g., `enrichSelectSearchOptionsMap.test.ts`), the **file name already names the function** — do NOT repeat it as the outermost `describe`. Start directly at the **feature/behavior** level.
+
+> For component test files (e.g., `VideoEditor.test.tsx`) that test multiple concerns, an outer `describe('<ComponentName>', ...)` wrapper is still appropriate.
+
+### Describe hierarchy
+
+| Context                       | Top-level `describe`                  | Example                                                          |
+| ----------------------------- | ------------------------------------- | ---------------------------------------------------------------- |
+| **Per-function test file**    | The **feature / observable behavior** | `describe('synthetic options from saved composite values', ...)` |
+| **Component / multi-concern** | The component / module under test     | `describe('VideoEditor', ...)`                                   |
+| `it` / `it.each`              | **Condition + expected outcome**      | `'should skip enrichment when keyword is active'`                |
+
+### Sub-feature nesting
+
+Related sub-behaviors belong **inside** their parent feature `describe`, not as sibling top-level describes.
 
 ```typescript
-describe('ComponentName or functionName', () => {
-  describe('feature category 1', () => {
-    it('should behavior 1', () => { ... });
-    it('should behavior 2', () => { ... });
+// ✅ CORRECT – sub-features nested inside the feature they qualify
+describe('synthetic options generation from saved composite values (code::name)', () => {
+  it.each([...])(
+    'should create synthetic option for $condition and leave $otherField untouched',
+    ({ ... }) => { ... },
+  );
+
+  it('should create synthetic options for ALL items when a field has multiple saved values', ...);
+  it('should NOT add a duplicate entry when saved value already exists in API options', ...);
+
+  describe('keyword is active while enriching', () => {
+    it('should skip synthetic entry for the field whose keyword is non-empty', ...);
+    it('should still enrich the OTHER field when only one keyword is active', ...);
   });
 
-  describe('feature category 2', () => {
-    it('should behavior 3', () => { ... });
+  describe('plain string value (no code::name format)', () => {
+    it.each([...])(...)
+  });
+
+  describe('edge cases', () => {
+    it('should return optionsMap unchanged when formValues is undefined', ...);
+    it('should NOT mutate the original optionsMap', ...);
   });
 });
 ```
 
-### Example
+This produces clean, hierarchical terminal output:
+
+```
+✓ synthetic options generation from saved composite values (code::name) (9)
+    ✓ should create synthetic option for single saved diseaseName and leave surgeryName untouched
+    ✓ should create synthetic option for single saved surgeryName and leave diseaseName untouched
+    ✓ should create synthetic options for ALL items when a field has multiple saved values
+    ✓ should NOT add a duplicate entry when saved value already exists in API options
+    ✓ keyword is active while enriching (2)
+        ✓ should skip synthetic entry for the field whose keyword is non-empty
+        ✓ should still enrich the OTHER field when only one keyword is active
+    ✓ plain string value (no code::name format) (3)
+        ✓ should handle no "::" separator: "高血压"
+        ✓ should handle empty code part: "::原发性高血压"
+    ✓ edge cases (3)
+        ✓ should return optionsMap unchanged when formValues is undefined
+```
+
+### ✅ GOOD — One describe per feature, conditions inside it/it.each
 
 ```typescript
-describe('formatDurationToChinese', () => {
+// ✅ CORRECT – one describe for the feature, it.each for the conditions
+describe('synthetic options generation from saved composite values (code::name)', () => {
+  it.each([
+    { condition: 'single saved diseaseName', field: 'diseaseName', arrayKey: 'pastHistory', ... },
+    { condition: 'single saved surgeryName', field: 'surgeryName', arrayKey: 'surgeryHistoryList', ... },
+  ])(
+    'should create synthetic option for $condition and leave $otherField untouched',
+    ({ ... }) => { ... },
+  );
+});
+```
+
+### ❌ BAD — Wrapping a per-function file in a function-name describe
+
+```typescript
+// ❌ WRONG – file is already named enrichSelectSearchOptionsMap.test.ts,
+//            no need to repeat the function name as the outermost describe
+describe('enrichSelectSearchOptionsMap', () => {
+  describe('synthetic options generation ...', () => { ... });
+  describe('edge cases', () => { ... });
+});
+```
+
+### ❌ BAD — Splitting the same feature into multiple sibling describes
+
+```typescript
+// ❌ WRONG – these two describes test the SAME feature: synthetic option generation
+describe('single saved diseaseName in pastHistory[]', () => {
+  it('should create synthetic option ...');
+});
+
+describe('single saved surgeryName in surgeryHistoryList[]', () => {
+  it('should create synthetic option ...');
+});
+```
+
+### ❌ BAD — Sub-features as top-level siblings instead of nested inside parent
+
+```typescript
+// ❌ WRONG – "keyword active" is a sub-behavior of synthetic options generation,
+//            but it is placed as a sibling at the top level
+describe('synthetic options generation from saved composite values (code::name)', () => {
+  it.each([...])(...);
+});
+
+describe('keyword is active while enriching', () => {   // ← should be INSIDE the parent describe
+  it('should skip when keyword is non-empty', ...);
+});
+```
+
+### When to use a new describe vs. a new it
+
+- **New `describe`**: Different **feature area** or **behavior category** (e.g., "keyword active state", "immutability", "edge cases")
+- **New `it`**: Different **condition or input** for the _same_ feature → prefer `it.each` if structure is identical
+
+### Example — per-function file
+
+```typescript
+// File: enrichSelectSearchOptionsMap.test.ts
+// ✅ No outer describe wrapping the function name — file name handles that
+
+describe('synthetic options generation from saved composite values (code::name)', () => {
+  it.each([
+    { condition: 'single saved diseaseName', field: 'diseaseName', ... },
+    { condition: 'single saved surgeryName', field: 'surgeryName', ... },
+  ])(
+    'should create synthetic option for $condition and leave $otherField untouched',
+    ({ field, arrayKey, value, expectedLabel, otherField }) => {
+      // arrange
+      const optionsMap = emptyOptionsMap();
+      const formValues = { [arrayKey]: [{ [field]: value }] };
+
+      // act
+      const result = enrichSelectSearchOptionsMap(optionsMap, formValues);
+
+      // assert
+      expect(result[field]).toEqual([{ label: expectedLabel, value }]);
+      expect(result[otherField]).toEqual([]);
+    },
+  );
+
+  describe('keyword is active while enriching', () => {
+    it('should skip synthetic entry for the field whose keyword is non-empty', () => {
+      // arrange
+      const optionsMap = emptyOptionsMap();
+      const formValues = { pastHistory: [{ diseaseName: 'I10::原发性高血压' }] };
+      const keywordMap = { diseaseName: '血压', surgeryName: '' };
+
+      // act
+      const result = enrichSelectSearchOptionsMap(optionsMap, formValues, keywordMap);
+
+      // assert
+      expect(result.diseaseName).toEqual([]);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should return optionsMap unchanged when formValues is undefined', () => {
+      // arrange
+      const optionsMap = emptyOptionsMap();
+
+      // act
+      const result = enrichSelectSearchOptionsMap(optionsMap, undefined);
+
+      // assert
+      expect(result).toEqual(optionsMap);
+    });
+  });
+});
+```
+
+### Example — component/multi-concern file
+
+```typescript
+// File: VideoEditor.test.tsx
+// ✅ Outer describe IS appropriate here since file covers a whole component
+
+describe('VideoEditor', () => {
   describe('Acceptance Criteria', () => {
     it('should return "1分钟" for durations from 1 to 59 seconds', () => {
-      // arrange
-      const input = 30;
-
-      // act
-      const result = formatDurationToChinese(input);
-
-      // assert
-      expect(result).toBe('1分钟');
-    });
-
-    it('should return empty placeholder for negative durations', () => {
-      // arrange
-      const input = -1;
-
-      // act
-      const result = formatDurationToChinese(input);
-
-      // assert
-      expect(result).toBe(EMPTY_PLACEHOLDER);
+      // arrange / act / assert ...
     });
   });
 
   describe('Edge Cases', () => {
     it('should handle null and undefined inputs', () => {
-      // arrange
-      const inputNull = null;
-      const inputUndefined = undefined;
-
-      // act
-      const resultNull = formatDurationToChinese(inputNull as any);
-      const resultUndefined = formatDurationToChinese(inputUndefined as any);
-
-      // assert
-      expect(resultNull).toBe(EMPTY_PLACEHOLDER);
-      expect(resultUndefined).toBe(EMPTY_PLACEHOLDER);
-    });
-  });
-
-  describe('Format Validation', () => {
-    it('should use correct Chinese characters', () => {
-      // arrange
-      const input = 3660; // 1h 1m
-
-      // act
-      const result = formatDurationToChinese(input);
-
-      // assert
-      expect(result).toContain('小时');
-      expect(result).toContain('分钟');
+      // arrange / act / assert ...
     });
   });
 });
@@ -285,7 +484,7 @@ Always perform cleanup in `afterEach` to guarantee a clean environment for the f
 afterEach(() => {
   // ✅ Clear mock call history and results
   vi.clearAllMocks();
-  
+
   // ✅ Restore real timers if fake timers were used
   if (vi.isMockFunction(setTimeout)) {
     vi.useRealTimers();

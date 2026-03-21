@@ -47,6 +47,18 @@ import { vi } from 'vitest'; // Mock utilities
 
 ### File Location: `tests/setupTests.ts`
 
+### Pre-Mocked Modules (DO NOT re-mock in individual tests)
+
+The following are already mocked globally in `setupTests.ts` — **do not add them again in test files**:
+
+| Module                                          | What is mocked                                                                  |
+| ----------------------------------------------- | ------------------------------------------------------------------------------- |
+| `react-i18next`                                 | `useTranslation` → `t: (key) => key`, `initReactI18next`                        |
+| `@src/infrastructure/localize/localizeServices` | `antdZhCNCustomized`, `localizeService`                                         |
+| `@src/app/stream`                               | `useMultipleStreams`, `useSingleStream`, `useSocket`, `MultipleStreamsProvider` |
+
+Browser APIs automatically polyfilled: `localStorage`, `matchMedia`, `ResizeObserver`, `IntersectionObserver`, `Response`, `Headers`, `window.scrollTo`.
+
 ---
 
 ## Path Aliases
@@ -159,9 +171,38 @@ yarn test
 # Run a specific test
 yarn test path/to/your/test-file.test.ts
 
+# Watch mode (re-runs on change)
+yarn test:watch path/to/your/test-file.test.ts
+
 # Validate safety and syntax errors for test files
 yarn tsc:check-tests
 ```
+
+---
+
+## Reusable UI Component Mocks
+
+### File Location: `tests/mocks/ui-components.tsx`
+
+Provides lightweight mock implementations of `@src/ui/components` exports to avoid loading heavy Ant Design internals in tests.
+
+**Available mocks:** `mockButton`, `mockModal`, `mockInput`, `mockSelect`, `mockCheckbox`, `mockForm`, `mockFormItem`, `mockSpin`, `mockEmpty`
+
+### Usage Pattern (async import — required)
+
+```typescript
+vi.mock('@src/ui/components', async () => {
+  const { mockButton, mockModal } = await import('@tests/mocks/ui-components');
+  return {
+    Button: mockButton,
+    Modal: mockModal,
+    // add custom mocks for other exports as needed
+  };
+});
+```
+
+> **Why async import?** `vi.mock` is hoisted to the top of the file before imports run. Using `async () => { const { ... } = await import(...) }` is the correct pattern to dynamically load the mock helpers.
+
 ---
 
 ## Summary
@@ -169,5 +210,6 @@ yarn tsc:check-tests
 - **Vitest** with **jsdom** for fast, isolated tests
 - **@testing-library/react** for component testing
 - **MSW** for API mocking (covered in separate reference)
-- **Global setup** handles browser API mocks
+- **Global setup** handles browser API mocks and common module mocks
 - **Path aliases** for clean imports
+- **`tests/mocks/ui-components.tsx`** for reusable lightweight UI component mocks

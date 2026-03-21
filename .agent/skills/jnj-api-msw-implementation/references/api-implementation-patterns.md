@@ -17,8 +17,9 @@ src/app/{module}/apis/{domain}/endpoints.ts
 ### Naming Convention
 
 - Use `{DOMAIN}_ENDPOINTS` constant (SCREAMING_SNAKE_CASE)
-- Static endpoints: plain strings
+- Static endpoints: **plain strings** — never wrap in `() =>` when there are no parameters
 - Dynamic endpoints: arrow functions accepting parameters
+- Comments in endpoint files must be in **English**
 
 ### Example
 
@@ -30,7 +31,7 @@ export const USERS_ENDPOINTS = {
   getUserList: '/users',
   createUser: '/users',
   getHospital: '/users/hospital',
-  
+
   // Dynamic endpoints (with path parameters)
   getUserById: (userId: string) => `/users/${userId}`,
   updateUser: (userId: string) => `/users/${userId}`,
@@ -88,18 +89,12 @@ export type CreateUserRequest = {
 export type CreateUserResponse = User;
 
 // 6. Export async function
-export const createUser = async (
-  request: CreateUserRequest
-): Promise<CreateUserResponse> => {
-  const response = await userTokenRequiredApi.post<CreateUserResponse>(
-    USERS_ENDPOINTS.createUser,
-    request,
-    {
-      headers: {
-        Accept: 'application/json;v1'  // API versioning
-      }
-    }
-  );
+export const createUser = async (request: CreateUserRequest): Promise<CreateUserResponse> => {
+  const response = await userTokenRequiredApi.post<CreateUserResponse>(USERS_ENDPOINTS.createUser, request, {
+    headers: {
+      Accept: 'application/json;v1', // API versioning
+    },
+  });
   return response.data;
 };
 ```
@@ -112,12 +107,9 @@ export const createUser = async (
 
 ```typescript
 export const getUserById = async (userId: string): Promise<User> => {
-  const response = await userTokenRequiredApi.get<User>(
-    USERS_ENDPOINTS.getUserById(userId),
-    {
-      headers: { Accept: 'application/json;v1' }
-    }
-  );
+  const response = await userTokenRequiredApi.get<User>(USERS_ENDPOINTS.getUserById(userId), {
+    headers: { Accept: 'application/json;v1' },
+  });
   return response.data;
 };
 ```
@@ -132,16 +124,11 @@ export type GetUserListRequest = {
   sort?: string;
 };
 
-export const getUserList = async (
-  params?: GetUserListRequest
-): Promise<GetUserListResponse> => {
-  const response = await userTokenRequiredApi.get<GetUserListResponse>(
-    USERS_ENDPOINTS.getUserList,
-    {
-      params,  // Axios auto-serializes to query string
-      headers: { Accept: 'application/json;v1' }
-    }
-  );
+export const getUserList = async (params?: GetUserListRequest): Promise<GetUserListResponse> => {
+  const response = await userTokenRequiredApi.get<GetUserListResponse>(USERS_ENDPOINTS.getUserList, {
+    params, // Axios auto-serializes to query string
+    headers: { Accept: 'application/json;v1' },
+  });
   return response.data;
 };
 ```
@@ -149,15 +136,13 @@ export const getUserList = async (
 ### POST Request (Create)
 
 ```typescript
-export const createUser = async (
-  request: CreateUserRequest
-): Promise<User> => {
+export const createUser = async (request: CreateUserRequest): Promise<User> => {
   const response = await userTokenRequiredApi.post<User>(
     USERS_ENDPOINTS.createUser,
-    request,  // Request body
+    request, // Request body
     {
-      headers: { Accept: 'application/json;v1' }
-    }
+      headers: { Accept: 'application/json;v1' },
+    },
   );
   return response.data;
 };
@@ -166,16 +151,13 @@ export const createUser = async (
 ### PUT Request (Update)
 
 ```typescript
-export const updateUser = async (
-  userId: string,
-  request: UpdateUserRequest
-): Promise<User> => {
+export const updateUser = async (userId: string, request: UpdateUserRequest): Promise<User> => {
   const response = await userTokenRequiredApi.put<User>(
-    USERS_ENDPOINTS.updateUser(userId),  // Dynamic endpoint
+    USERS_ENDPOINTS.updateUser(userId), // Dynamic endpoint
     request,
     {
-      headers: { Accept: 'application/json;v1' }
-    }
+      headers: { Accept: 'application/json;v1' },
+    },
   );
   return response.data;
 };
@@ -185,12 +167,9 @@ export const updateUser = async (
 
 ```typescript
 export const deleteUser = async (userId: string): Promise<void> => {
-  await userTokenRequiredApi.delete(
-    USERS_ENDPOINTS.deleteUser(userId),
-    {
-      headers: { Accept: 'application/json;v1' }
-    }
-  );
+  await userTokenRequiredApi.delete(USERS_ENDPOINTS.deleteUser(userId), {
+    headers: { Accept: 'application/json;v1' },
+  });
 };
 ```
 
@@ -200,26 +179,22 @@ export const deleteUser = async (userId: string): Promise<void> => {
 export const uploadReport = async (
   recordId: string,
   file: File,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
 ): Promise<Report> => {
   const formData = new FormData();
   formData.append('file', file);
-  
-  const response = await userTokenRequiredApi.post<Report>(
-    ENDPOINTS.uploadReport(recordId),
-    formData,
-    {
-      headers: {
-        Accept: 'application/json;v1',
-        'Content-Type': 'multipart/form-data'
-      },
-      onUploadProgress: (event) => {
-        if (event.total) {
-          onProgress?.(Math.round((event.loaded / event.total) * 100));
-        }
+
+  const response = await userTokenRequiredApi.post<Report>(ENDPOINTS.uploadReport(recordId), formData, {
+    headers: {
+      Accept: 'application/json;v1',
+      'Content-Type': 'multipart/form-data',
+    },
+    onUploadProgress: event => {
+      if (event.total) {
+        onProgress?.(Math.round((event.loaded / event.total) * 100));
       }
-    }
-  );
+    },
+  });
   return response.data;
 };
 ```
@@ -231,8 +206,12 @@ export const uploadReport = async (
 All requests include the `Accept` header for versioning:
 
 ```typescript
-headers: { Accept: 'application/json;v1' }  // Version 1
-headers: { Accept: 'application/json;v2' }  // Version 2
+headers: {
+  Accept: 'application/json;v1';
+} // Version 1
+headers: {
+  Accept: 'application/json;v2';
+} // Version 2
 ```
 
 ---
@@ -303,14 +282,13 @@ export type GetUserListResponse = {
 
 ```typescript
 export const getDeviceToken = async (): Promise<DeviceToken> => {
-  const response = await authApi.get<DeviceTokenResponse>(
-    ENDPOINTS.getDeviceToken,
-    { headers: { Accept: 'application/json;v1' } }
-  );
-  
+  const response = await authApi.get<DeviceTokenResponse>(ENDPOINTS.getDeviceToken, {
+    headers: { Accept: 'application/json;v1' },
+  });
+
   // Transform response
   return {
-    deviceToken: response.data.token
+    deviceToken: response.data.token,
   };
 };
 ```
@@ -323,7 +301,7 @@ export const riskyOperation = async (): Promise<Result> => {
     const response = await userTokenRequiredApi.post<Result>(
       ENDPOINTS.riskyOperation,
       {},
-      { headers: { Accept: 'application/json;v1' } }
+      { headers: { Accept: 'application/json;v1' } },
     );
     return response.data;
   } catch (error) {
@@ -341,10 +319,10 @@ export const riskyOperation = async (): Promise<Result> => {
 
 Existing implementations to study:
 
-| Module | Location |
-|--------|----------|
-| Auth | `src/app/auth/apis/userToken/` |
-| Admin Users | `src/app/admin/apis/users/` |
-| Admin Departments | `src/app/admin/apis/departments/` |
-| Surgery Center | `src/app/surgeryCenter/apis/surgery/` |
-| Research Center | `src/app/researchCenter/apis/research/` |
+| Module            | Location                                |
+| ----------------- | --------------------------------------- |
+| Auth              | `src/app/auth/apis/userToken/`          |
+| Admin Users       | `src/app/admin/apis/users/`             |
+| Admin Departments | `src/app/admin/apis/departments/`       |
+| Surgery Center    | `src/app/surgeryCenter/apis/surgery/`   |
+| Research Center   | `src/app/researchCenter/apis/research/` |

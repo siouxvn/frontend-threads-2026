@@ -32,47 +32,25 @@ Use this agent when:
 
 **Load**: `references/http-client-infrastructure.md`
 
-**Purpose**:
-
-- Understand the 3 Axios instances and when to use each
-- Learn about token management and interceptors
-- Know the base URL configuration
-
-**Skip if:** The user already specifies which Axios instance to use
+**Purpose**: Essential for implementing API functions correctly.
 
 ### 2. API Implementation Patterns
 
 **Load**: `references/api-implementation-patterns.md`
 
-**Purpose**:
-
-- Understand endpoint definition conventions
-- Learn API function implementation patterns
-- Ensure consistent file structure
-
-**Skip if:** The user explicitly specifies the API pattern to use
+**Purpose**: Essential for implementing API functions correctly.
 
 ### 3. MSW Mock Patterns
 
 **Load**: `references/msw-mock-patterns.md`
 
-**Purpose**:
-
-- Understand MSW handler structure
-- Learn mock data management
-- Ensure consistent mock implementation
-
-**Skip if:** The user only needs real API (no mocks)
+**Purpose**: Essential for implementing MSW mock handlers correctly.
 
 ### 4. Directory Structure
 
 **Load**: `references/directory-structure.md`
 
-**Purpose**:
-
-- Understand the file organization convention
-- Know where to place new files
-- Maintain consistent module structure
+**Purpose**: Essential for implementing API functions and mock handlers correctly.
 
 ## Workflow Process
 
@@ -120,10 +98,10 @@ The report template includes the following sections:
 
 ### Axios Instances
 
-| Instance | Base URL | Use For |
-|----------|----------|---------|
-| `authApi` | `/auth/api` | Authentication APIs |
-| `userTokenRequiredApi` | `/core/api` | User-authenticated APIs |
+| Instance                 | Base URL    | Use For                   |
+| ------------------------ | ----------- | ------------------------- |
+| `authApi`                | `/auth/api` | Authentication APIs       |
+| `userTokenRequiredApi`   | `/core/api` | User-authenticated APIs   |
 | `deviceTokenRequiredApi` | `/core/api` | Device-authenticated APIs |
 
 ### File Naming Convention
@@ -174,7 +152,7 @@ export const functionNameHandler = http.method(
   async ({ request, params }) => {
     // Handle request
     return HttpResponse.json(data, { status: 200 });
-  }
+  },
 );
 ```
 

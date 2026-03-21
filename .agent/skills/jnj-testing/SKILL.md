@@ -1,12 +1,85 @@
 ---
 name: jnj-testing
-description: Write comprehensive tests for JnJ projects following Testing Trophy Model and established testing conventions.
+description: "**WORKFLOW SKILL** — Write, plan, review, and verify tests for JnJ Monarch Hub projects. USE FOR: any request to write or fix tests (unit, integration, component, hook, API, state machine, XState); adding test coverage to new or existing features; reviewing test quality; any message containing \"test\", \"spec\", \"viết test\", \"thêm test\", \"kiểm tra\", \"coverage\". CRITICAL RULES ENFORCED (read skill BEFORE coding): Testing Trophy prioritization — favor component + integration tests over pure unit tests; AAA pattern mandatory in every it() block; MSW for all HTTP mocking — NEVER mock @tanstack/react-query or API modules directly; real QueryClient+QueryClientProvider for React Query tests; SELECTORS as const + testHelpers pattern; react-i18next already globally mocked in setupTests.ts. DO NOT USE FOR: non-test implementation, debugging production errors."
 version: 1.0.0
 ---
 
 # JnJ Testing Implementation
 
 This skill is for **writing comprehensive tests** in JnJ projects, ensuring all tests strictly follow the agreed-upon **testing conventions, best practices, and patterns** based on the **Testing Trophy Model**.
+
+## ⚠️ Critical Rules — Read Before Writing Any Test Code
+
+These rules are non-negotiable and are the most commonly missed. Apply them in **every single test**.
+
+### Rule 1 — AAA Pattern is MANDATORY in every `it()` block
+
+Every test must have explicit inline comments: `// arrange`, `// act`, `// assert`.
+
+```typescript
+it('should show option from saved value', async () => {
+  // arrange
+  const values = savedValuesFor({ pastHistory: [{ diseaseName: 'I10::高血压' }] });
+
+  // act
+  renderComponent(values);
+
+  // assert
+  await waitFor(() => expect(screen.getByText('高血压')).toBeTruthy());
+});
+```
+
+### Rule 2 — MSW for HTTP mocking. NEVER mock `@tanstack/react-query` or API modules directly
+
+```typescript
+// ❌ WRONG — kills real data flow, hides bugs
+vi.mock('@tanstack/react-query', () => ({ useQuery: vi.fn() }));
+vi.mock('@src/app/researchCenter/apis', () => ({ getPatientRecord: vi.fn() }));
+
+// ✅ CORRECT — real hooks + real functions + MSW intercepts HTTP
+const server = setupServer();
+const createWrapper = () => { /* QueryClient + QueryClientProvider */ };
+
+server.use(
+  http.get(baseURL + RESEARCH_ENDPOINTS.getPatientRecord('r-1', 'rec-1'), () =>
+    HttpResponse.json(recordMock)
+  ),
+);
+render(<Component />, { wrapper: createWrapper() });
+```
+
+### Rule 3 — Testing Trophy: always ask "what level is this?"
+
+Priority: **Integration > Component > Unit > Static**
+
+- **Component tests** → render `<Component />` with real React Query + MSW. The default for UI work.
+- **Integration tests** → test multiple units/hooks together through a real data flow.
+- **Unit tests** → only for pure utility/calculation/formatting functions.
+- **Static tests** → TypeScript type checks. Already handled by `tsc`.
+
+Do NOT default to unit tests when a component or integration test gives more confidence.
+
+### Rule 4 — SELECTORS + testHelpers. No magic strings in test bodies
+
+```typescript
+// Always define these at module level
+const SELECTORS = {
+  submitButton: 'submit-btn',
+  errorMessage: 'error-msg',
+} as const;
+
+const testHelpers = {
+  clickSubmit: async () => await userEvent.click(screen.getByTestId(SELECTORS.submitButton)),
+  waitForError: async () => waitFor(() => expect(screen.getByTestId(SELECTORS.errorMessage)).toBeTruthy()),
+};
+```
+
+### Rule 5 — Do NOT re-mock globally mocked modules
+
+`tests/setupTests.ts` already mocks: **`react-i18next`**, `@src/app/stream`, `@src/infrastructure/localize/localizeServices`.
+Do **not** add `vi.mock('react-i18next', ...)` in individual test files.
+
+---
 
 ## Arguments
 
@@ -147,21 +220,21 @@ Use this skill when:
 
    **Required output format** for each file in the plan:
 
-   ```markdown
+   ````markdown
    #### <ID>: `path/to/file.ts`
 
    **File test:** `tests/path/to/file.test.ts`
-   **Level:** [Static | Unit | Integration | E2E]  ← Testing Trophy tier based on `references/testing-philosophy.md`
+   **Level:** [Static | Unit | Integration | E2E] ← Testing Trophy tier based on `references/testing-philosophy.md`
    **Effort:** [LOW | MEDIUM | HIGH] | **Impact:** [LOW | MEDIUM | HIGH]
 
    \```
    describe('functionOrComponentName')
-     ├── should handle happy path
-     ├── should handle edge case (null, empty, boundary)
-     ├── should handle error scenario
-     └── should handle [other scenario]
+   ├── should handle happy path
+   ├── should handle edge case (null, empty, boundary)
+   ├── should handle error scenario
+   └── should handle [other scenario]
    \```
-   ```
+   ````
 
 4. **Implement** tests
    - Follow AAA pattern with clear block comments
@@ -170,8 +243,8 @@ Use this skill when:
    - Follow Testing Trophy prioritization
 
 5. **Run** tests and verify coverage
-   - Execute tests: `npm run test`
-   - Check coverage: `npm run test:coverage`
+   - Execute tests: `yarn test`
+   - Check coverage: `yarn test:cov`
    - Ensure no console errors or warnings
    - Verify all assertions pass
 
@@ -189,6 +262,13 @@ Before marking tests as complete, verify:
 - [ ] All tests use AAA pattern with `// arrange`, `// act`, `// assert` comments
 - [ ] Parameterized tests use `it.each` instead of multiple similar `it` blocks
 - [ ] API tests use MSW handlers (except FormData uploads which use spy)
+- [ ] Component tests that use React Query use real `QueryClient` + `QueryClientProvider` via `createWrapper()` — **NEVER mock `@tanstack/react-query` directly**
+- [ ] MSW lifecycle hooks present: `beforeAll(server.listen)`, `afterAll(server.close)`, `afterEach(server.resetHandlers + vi.clearAllMocks)`
+- [ ] `data-testid` strings are centralized in a `SELECTORS as const` object — no magic strings inline in test bodies
+- [ ] Common query/action/wait helpers are placed in a `testHelpers` object
+- [ ] Fixture IDs use `TEST_IDS as const`; computed API URLs use `API_URLS as const` derived from real endpoint functions
+- [ ] `react-i18next` is **NOT** mocked per-test (already mocked globally in `setupTests.ts`)
+- [ ] `@src/ui/components` is mocked using `@tests/mocks/ui-components` via async import pattern
 - [ ] Component tests focus on user behavior, not implementation
 - [ ] Async code uses `vi.useFakeTimers` and `act()` where needed
 - [ ] **XState tests use `createActor` + real events — NEVER check static config object properties**

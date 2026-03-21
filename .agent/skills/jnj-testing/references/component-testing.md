@@ -293,6 +293,10 @@ it('should disable submit button when form is invalid', () => {
 
 ## Testing with React Query
 
+### createWrapper Pattern
+
+Always create a **fresh `QueryClient` per test** to prevent query cache leaking between tests.
+
 ```typescript
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -304,28 +308,58 @@ const createWrapper = () => {
       mutations: { retry: false },
     },
   });
-
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+  Wrapper.displayName = 'TestWrapper';
+  return Wrapper;
+};
+```
+
+### Combined renderComponent Helper
+
+For components that always need the same set of MSW handlers, **encapsulate both the `server.use()` setup and the `render()` call inside a `renderComponent` helper**.
+
+This keeps test bodies clean — each test only passes the data variation it cares about.
+
+```typescript
+const server = setupServer();
+
+const renderComponent = (datasetValues: Record<string, unknown> = {}) => {
+  // Set up all default handlers for this component
+  server.use(
+    http.get(API_URLS.patientRecord, () => HttpResponse.json(recordMock)),
+    http.get(API_URLS.datasetSchema, () => HttpResponse.json(datasetSchemaMock)),
+    http.get(API_URLS.datasetValues, () => HttpResponse.json(datasetValues)),
+    http.get(API_URLS.userProfile, () => HttpResponse.json(userProfileMock)),
+  );
+  return render(<MyComponent />, { wrapper: createWrapper() });
 };
 
+// Usage: each test only overrides what it needs
 it('should display data after successful fetch', async () => {
   // arrange
-  server.use(
-    http.get(baseURL + ENDPOINTS.getUsers, () => {
-      return HttpResponse.json([{ id: 1, name: 'John' }]);
-    })
-  );
+  const values = { items: [{ name: 'John' }] };
 
   // act
-  render(<UserList />, { wrapper: createWrapper() });
+  renderComponent(values);
 
   // assert
   await waitFor(() => {
     expect(screen.getByText('John')).toBeInTheDocument();
+  });
+});
+```
+
+**Lifecycle hooks (required):**
+
+```typescript
+describe('MyComponent', () => {
+  beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+  afterAll(() => server.close());
+  afterEach(() => {
+    server.resetHandlers();
+    vi.clearAllMocks();
   });
 });
 ```
@@ -497,6 +531,32 @@ it('should render with providers', () => {
 
 ---
 
+## Reusing Shared UI Mock Utilities
+
+For components that import from `@src/ui/components`, use the shared mocks in `tests/mocks/ui-components.tsx` via the async import pattern:
+
+```typescript
+vi.mock('@src/ui/components', async () => {
+  const { mockButton, mockModal } = await import('@tests/mocks/ui-components');
+
+  // Add custom mocks for any exports not in the shared file
+  const MockCustomWidget = ({ schema, onMount }: any) => {
+    useEffect(() => { onMount?.(); }, [onMount]);
+    return <div data-testid="custom-widget" />;
+  };
+
+  return {
+    Button: mockButton,
+    Modal: mockModal,
+    CustomWidget: MockCustomWidget,
+  };
+});
+```
+
+Available shared mocks: `mockButton`, `mockModal`, `mockInput`, `mockSelect`, `mockCheckbox`, `mockForm`, `mockFormItem`, `mockSpin`, `mockEmpty`.
+
+---
+
 ## Mocking Complex UI Components (e.g., Ant Design)
 
 In projects using Ant Design (especially version 5+ with ESM), component styles or internal submodules (like `theme/internal`) may cause resolution errors in JSDOM/Vitest. In such cases, **targeted mocking** of UI components is recommended.
@@ -512,12 +572,12 @@ In projects using Ant Design (especially version 5+ with ESM), component styles 
 ```typescript
 vi.mock('@src/ui/components', async () => {
   const { Form } = await import('antd'); // Import real logic if needed
-  
+
   return {
     Modal: ({ children, title, open, onOk, onCancel, okText, cancelText, okButtonProps }: ModalProps & { children?: ReactNode }) => {
       // ✅ Respect visibility state
       if (!open) return null;
-      
+
       return (
         <div role="dialog" aria-label={typeof title === 'string' ? title : undefined}>
           <h1>{title}</h1>
