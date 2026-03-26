@@ -6,5 +6,5 @@ node_modules
 .dumi/tmp-production
 .DS_Store
 
-# Snyk Security Extension - AI Rules (auto-generated)
-.github/instructions/snyk_rules.instructions.md
+# CLAUDE
+.claude/settings.local.json
