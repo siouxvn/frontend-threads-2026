@@ -1,9 +1,10 @@
 ---
-nav: Threads
+nav: Frontend
 order: 2
 toc: content
 description: Four ways to consume a ReadableStream — illustrated by downloading a 4K video with progress tracking and cancellation support.
-keywords: [ReadableStream, async generator, observable, TransformStream, MSW, streaming]
+keywords:
+  [ReadableStream, async generator, observable, TransformStream, MSW, streaming]
 ---
 
 # Stream Processing Patterns
@@ -71,8 +72,8 @@ streams tokens internally.
 
 ## Pattern 3 — Observable <Badge type="warning">Reactive</Badge>
 
-Observable inverts the control flow: instead of the consumer *pulling* chunks, the producer
-*pushes* them to subscribers via `observer.next()`. This push-based model enables instant
+Observable inverts the control flow: instead of the consumer _pulling_ chunks, the producer
+_pushes_ them to subscribers via `observer.next()`. This push-based model enables instant
 cancellation — `subscription.unsubscribe()` sets a flag that stops the internal read loop
 immediately, without polling an `AbortSignal` between chunks.
 
@@ -107,14 +108,14 @@ reader.
 
 ## Comparison
 
-|  | `while(true)` | Async Generator | Observable | TransformStream |
-|--|:--:|:--:|:--:|:--:|
-| **Composable** | ❌ Manual | ✅ Nested generators | ✅ `.pipe()` | ✅ `.pipeThrough()` |
-| **Cancellation** | ⚠️ Manual check | ✅ `break` + `finally` | ✅ `unsubscribe()` | ✅ `cancel()` |
-| **Backpressure** | ❌ None | ✅ Pull-based | ❌ Push-based | ✅ `highWaterMark` |
-| **Error handling** | ⚠️ `try/catch` only | ✅ Propagates via `finally` | ✅ `observer.error` | ✅ Propagates |
-| **Complexity** | Low | Medium | High | Medium |
-| **Native browser API** | ✅ | ✅ | ❌ Self-implemented | ✅ |
+|                        |    `while(true)`    |       Async Generator       |     Observable      |   TransformStream   |
+| ---------------------- | :-----------------: | :-------------------------: | :-----------------: | :-----------------: |
+| **Composable**         |      ❌ Manual      |    ✅ Nested generators     |    ✅ `.pipe()`     | ✅ `.pipeThrough()` |
+| **Cancellation**       |   ⚠️ Manual check   |   ✅ `break` + `finally`    | ✅ `unsubscribe()`  |    ✅ `cancel()`    |
+| **Backpressure**       |       ❌ None       |        ✅ Pull-based        |    ❌ Push-based    | ✅ `highWaterMark`  |
+| **Error handling**     | ⚠️ `try/catch` only | ✅ Propagates via `finally` | ✅ `observer.error` |    ✅ Propagates    |
+| **Complexity**         |         Low         |           Medium            |        High         |       Medium        |
+| **Native browser API** |         ✅          |             ✅              | ❌ Self-implemented |         ✅          |
 
 ## When to use each
 

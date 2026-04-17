@@ -1,5 +1,15 @@
 {
   "permissions": {
-    "allow": ["Bash(gh api:*)", "Bash(npx tsc:*)"]
+    "allow": [
+      "Bash(gh api:*)",
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:d.umijs.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebSearch",
+      "Bash(npm install:*)",
+      "Bash(npm --version)",
+      "Bash(npm run:*)"
+    ]
   }
 }

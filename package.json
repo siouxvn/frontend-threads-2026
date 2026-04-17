@@ -82,7 +82,7 @@
     "@types/react": "^18.3.27",
     "@types/react-dom": "^18.3.7",
     "@umijs/lint": "^4.0.0",
-    "dumi": "^2.4.13",
+    "dumi": "^2.4.23",
     "eslint": "^8.57.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "father": "^4.1.0",
