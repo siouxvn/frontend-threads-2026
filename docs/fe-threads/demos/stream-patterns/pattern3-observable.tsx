@@ -5,12 +5,11 @@
  */
 import React from 'react';
 
-import { publicAsset } from './shared/asset-url';
+import { VIETNAM_4K_VIDEO_URL } from './shared/asset-url';
 import { DownloadShell } from './shared/DownloadShell';
 import type { DownloadFn } from './shared/types';
 
-// Served from docs/public/assets/ — bypasses the bundler (file is 1.8GB).
-const videoSrc = publicAsset('/4K_19m_Vietnam.webm');
+const videoSrc = VIETNAM_4K_VIDEO_URL;
 
 // ── Minimal Observable implementation ───────────────────────────────────────
 
