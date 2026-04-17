@@ -1,5 +1,5 @@
 ---
-nav: Threads
+nav: Frontend
 order: 1
 ---
 

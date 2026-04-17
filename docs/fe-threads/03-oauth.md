@@ -1,5 +1,5 @@
 ---
-nav: Threads
+nav: Frontend
 order: 3
 toc: content
 description: OAuth 2.0 and OpenID Connect — how authorization delegation works, key security patterns (PKCE, state, nonce), and two working demos with GitHub and Google.
