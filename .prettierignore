@@ -1,2 +1,5 @@
 /dist
+/docs-dist
+.dumi/
 *.yaml
+docs\public\mockServiceWorker.js

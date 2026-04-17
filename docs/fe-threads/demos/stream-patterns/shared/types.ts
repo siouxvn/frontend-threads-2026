@@ -1,4 +1,10 @@
-export type Status = 'idle' | 'connecting' | 'downloading' | 'done' | 'cancelled' | 'error';
+export type Status =
+  | 'idle'
+  | 'connecting'
+  | 'downloading'
+  | 'done'
+  | 'cancelled'
+  | 'error';
 
 export interface PhaseEntry {
   elapsed: number;
