@@ -2,4 +2,4 @@
 /docs-dist
 .dumi/
 *.yaml
-docs\public\mockServiceWorker.js
+docs/public/mockServiceWorker.js

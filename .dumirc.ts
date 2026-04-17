@@ -25,5 +25,5 @@ export default defineConfig({
     editLink: false,
     sourceLink: true,
   },
-  copy: ['docs/public/mockServiceWorker.js'],
+  copy: ['docs/public/mockServiceWorker.js', 'docs/assets/4K_19m_Vietnam.webm'],
 });
