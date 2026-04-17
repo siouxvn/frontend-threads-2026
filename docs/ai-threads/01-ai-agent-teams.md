@@ -5,6 +5,7 @@ order: 1
 toc: content
 description: tbd
 keywords: [tbd]
+debug: true
 ---
 
 ## Prompt
