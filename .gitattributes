@@ -1,0 +1,49 @@
+# Enforce LF line endings for all text files regardless of host OS.
+# Overrides the user's global core.autocrlf setting.
+* text=auto eol=lf
+
+# Explicit text files (in case auto-detection misses them)
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.js        text eol=lf
+*.jsx       text eol=lf
+*.mjs       text eol=lf
+*.cjs       text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf
+*.mdx       text eol=lf
+*.css       text eol=lf
+*.scss      text eol=lf
+*.html      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.xml       text eol=lf
+*.svg       text eol=lf
+*.sh        text eol=lf
+*.drawio    text eol=lf
+
+# Shell scripts must stay LF even on Windows checkouts
+*.bash      text eol=lf
+*.zsh       text eol=lf
+
+# Binary files — never touch
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.webp      binary
+*.pdf       binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.eot       binary
+*.otf       binary
+*.mp4       binary
+*.webm      binary
+*.mov       binary
+*.mp3       binary
+*.wav       binary
+*.zip       binary
+*.gz        binary
+*.tar       binary
