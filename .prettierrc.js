@@ -5,6 +5,7 @@ module.exports = {
   proseWrap: 'never',
   singleQuote: true,
   trailingComma: 'all',
+  endOfLine: 'lf',
   overrides: [
     {
       files: '*.md',

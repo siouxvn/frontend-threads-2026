@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Rules
+
+Read and follow all rule files in `.claude/rules/`:
+
+- [`.claude/rules/docs-authoring.md`](.claude/rules/docs-authoring.md) — mandatory rules for any work under `docs/` (skill activation, English-only content)
+
 ## Project Overview
 
 **ft2026** is a React component library and learning documentation platform built with [Dumi v2](https://d.umijs.org/) and [Father](https://github.com/umijs/father). It publishes both an npm package (`ft2026`) and a GitHub Pages documentation site.
