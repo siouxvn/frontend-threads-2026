@@ -3,6 +3,7 @@ name: sf-create-pr-description
 description: Generate a concise, review-friendly PR description by analyzing git diff between two branches. Use this skill whenever the user asks to write, create, or generate a PR description, pull request summary, or PR writeup — even if they just say "write me a PR desc" or "summarize what this branch does". Supports --update to incrementally update an existing description with only new commits.
 argument-hint: '[--update] [base-branch] [current-branch-or-commit]'
 disable-model-invocation: true
+allowed-tools: Bash(git rev-parse:*) Bash(git branch:*) Bash(git log:*) Bash(git diff:*) Bash(head:*) Bash(mkdir:*)
 ---
 
 Generate a concise PR description from git diff output and save it to the project.
@@ -122,8 +123,6 @@ Read the existing PR description carefully. Then:
 
 1. **Purpose** — Update only if the new commits change or expand the PR's purpose. If the purpose is still accurate, leave it as-is.
 2. **Summary of Changes** — Add new bullets for the new changes in the appropriate subsection (Primary or Supporting). Place them naturally among existing bullets — group related items together. If a new commit modifies something already described, update the existing bullet rather than adding a duplicate.
-3. **Pre-merge reviews** — Re-evaluate detection rules against the full diff (old + new commits) and update bold/⚠️ indicators accordingly.
-4. **Demo** — Leave untouched.
 
 The result should read as a single coherent description, not as "old stuff + appended new stuff". A reviewer reading it for the first time shouldn't be able to tell it was written incrementally.
 
