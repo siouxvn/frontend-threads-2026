@@ -1,0 +1,124 @@
+<mxfile>
+  <diagram name="two-axis-matrix" id="d2">
+    <mxGraphModel dx="1200" dy="800" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0" adaptiveColors="auto">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="2-axis breakdown: Axis A (per-UC) x Axis B (cross-cutting)" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="200" y="20" width="800" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="axisAZone" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="50" y="80" width="780" height="560" as="geometry"/>
+        </mxCell>
+        <mxCell id="axisALbl" value="Axis A: use-case verticals (13 stories)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;fontColor=#1A5490" vertex="1" parent="1">
+          <mxGeometry x="70" y="92" width="400" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc1" value="SRS.01.001&#xa;Script editor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#4a9eed;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="130" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc2" value="SRS.01.002&#xa;Reports list" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#4a9eed;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="130" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc3" value="SRS.01.003&#xa;Admin tools" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#4a9eed;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="130" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc4" value="SRS.01.004&#xa;Dashboard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#4a9eed;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="130" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc5" value="SRS.01.005&#xa;Settings" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d8ff;strokeColor=#4a9eed;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="130" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1a" value="1.A editor shell" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="210" width="140" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1b" value="1.B actions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="266" width="140" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1c" value="1.C websocket" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="322" width="140" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2a" value="2.A list view" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="230" y="210" width="140" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2b" value="2.B filter/sort" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="230" y="266" width="140" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3a" value="3.A user mgmt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="210" width="140" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3b" value="3.B audit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="266" width="140" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4a" value="4.A kpi tiles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="530" y="210" width="140" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4b" value="4.B detail drill" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="530" y="266" width="140" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4c" value="4.C filters" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="530" y="322" width="140" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="s5a" value="5.A profile" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="680" y="210" width="140" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="s5b" value="5.B preferences" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="680" y="266" width="140" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="noteA" value="stories per UC (1-3 days each), sub-tasks 2-6h inline" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontStyle=2;fontColor=#B85450" vertex="1" parent="1">
+          <mxGeometry x="80" y="390" width="600" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="axisBZone" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="860" y="80" width="290" height="560" as="geometry"/>
+        </mxCell>
+        <mxCell id="axisBLbl" value="Axis B: cross-cutting" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;fontColor=#6A1B9A" vertex="1" parent="1">
+          <mxGeometry x="880" y="92" width="260" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="axisBNote" value="(parking lot, 12 items)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=2;fontColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="880" y="116" width="260" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="Auth / SSO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="880" y="145" width="250" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="RBAC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="880" y="183" width="250" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b3" value="API client wrapper" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="880" y="221" width="250" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b4" value="WebSocket / socket.io" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="880" y="259" width="250" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b5" value="Design tokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="880" y="297" width="250" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b6" value="UI primitives (antd)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="880" y="335" width="250" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b7" value="Error boundary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="880" y="373" width="250" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b8" value="i18n" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="880" y="411" width="250" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b9" value="Logging / telemetry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="880" y="449" width="250" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b10" value="TLS / transport" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="880" y="487" width="250" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b11" value="Routing guards" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="880" y="525" width="250" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b12" value="Toast / notifications" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0bfff;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="880" y="563" width="250" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="noteB" value="Axis A first (checkpoint + commit), then Axis B next session" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=15;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="70" y="680" width="700" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="noteB2" value="Why: review burden lower per-UC; rollback clean; cross-cutting iterable separately" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontStyle=2;fontColor=#666666" vertex="1" parent="1">
+          <mxGeometry x="70" y="706" width="800" height="22" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
