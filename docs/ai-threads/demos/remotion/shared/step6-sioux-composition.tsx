@@ -60,6 +60,7 @@ const PillGrid = ({ localFrame, fps }: { localFrame: number; fps: number }) => (
       inset: 0,
       display: 'flex',
       flexWrap: 'wrap',
+      alignContent: 'center',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 18,
