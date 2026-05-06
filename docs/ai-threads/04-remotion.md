@@ -1,9 +1,9 @@
 ---
 nav: AI
-title: Remotion — Build Videos with React
+title: Remotion — the bridge between an idea and an MP4
 order: 4
 toc: content
-description: A linear, build-as-you-go tutorial for Remotion. Five live Player demos plus a CLI guide for rendering to MP4.
+description: Why Remotion is the bridge layer that lets an LLM go from "make me a video" to a real MP4 — plus a build-as-you-go tutorial of the primitives that power that pipeline.
 keywords:
   [
     remotion,
@@ -13,21 +13,25 @@ keywords:
     interpolate,
     spring,
     sequence,
-    transitions,
-    google-fonts,
+    ai-generated-video,
+    llm,
     mp4,
   ]
 ---
 
-# Remotion — Build Videos with React
+# Remotion — the bridge between an idea and an MP4
 
-[Remotion](https://www.remotion.dev/) is a framework that lets you author videos in React. Components describe each frame; a render pipeline turns them into MP4. The mental model is small:
+A few years ago, "I want a 15-second product reel" meant After Effects, six hours, and a designer who knew what they were doing. In 2026 it can mean: prompt an LLM, paste the output into a render command, ship the MP4. That bridge is real, and the load-bearing piece on the dev side is **[Remotion](https://www.remotion.dev/)** — a framework that lets you author videos in React.
+
+This is why Remotion belongs in an AI-threads section even though Remotion itself contains no AI. Sora and the other prompt-to-video models eat the "give me a creative scene" use case, but the moment you need video that is **structured, branded, data-driven, or repeatable** — explainer videos, captioned shorts, dashboards-rendered-as-clips, daily auto-generated reels — those models are the wrong tool. You want a programmable canvas. The LLM writes the program; Remotion runs it.
+
+The mental model is small enough that an LLM can hold it in head:
 
 - A **Composition** is a React tree rendered once per frame.
-- **Frame number** is the only input that changes — everything else (motion, opacity, position) is a function of the current frame.
-- The **Player** mounts that composition in a browser and scrubs frames in real time. The **CLI renderer** does the same headlessly and stitches frames into video.
+- **Frame number** is the only input that changes — every visual property (motion, opacity, position) is a function of `useCurrentFrame()`.
+- The **Player** mounts that composition in a browser and scrubs frames in real time. The **CLI renderer** does the same headlessly and stitches frames into video with FFmpeg.
 
-This thread builds a small intro reel for Remotion itself — five steps, each adding exactly one concept on top of the last. The browser previews are real Remotion Players. MP4 rendering is covered as a CLI section at the end.
+This thread builds a small intro reel for Remotion itself — five steps, each adding exactly one concept on top of the last. Treat the steps as the vocabulary you need so an LLM's output makes sense to you when you read it. At the end, a "Let an LLM write it" section closes the loop with a real prompt and the actual code it produced.
 
 > All five demos share a `<PlayerShell>` component that wraps a Composition in `<Player>` with sane defaults. Click "Show Code" on any demo to see only the concept under teaching — the boilerplate stays out of the way.
 
@@ -75,6 +79,8 @@ That covers placement. The next step adds polish — fonts, gradients, and a tra
 
 Steps 1–4 each isolated one primitive. The final cut puts them all on screen at once — and pulls a meta trick: the demo is a **split-screen**. The left side types the source code character by character. The right side renders the result of that source code. Both panels are pure functions of `useCurrentFrame()`.
 
+The source code shown on the left is exactly the shape of code an LLM produces when you prompt for "make me an animated title in Remotion" — a Composition function, `useCurrentFrame`, `spring`, an `<h1>` styled with a transform. Nothing the model couldn't write in one shot. The point of steps 1–4 was to give you the eyes to read this output, not the muscle memory to type it.
+
 The typewriter is not a sequence of `<Sequence>` blocks. It is one line of math:
 
 ```tsx | pure
@@ -109,6 +115,51 @@ The shared `<CodeTypewriter>` lives in `./demos/remotion/shared/code-typewriter.
 :::warning
 The Player preview is a **fast approximation**, not the final render. Codec, font hinting, and color profile differ between the in-browser player and the CLI MP4 output. Treat the Player as your fast feedback loop and verify the final cut by running an actual `remotion render`.
 :::
+
+## Let an LLM write it
+
+The reason to learn the primitives is not so you can hand-author every reel. It is so you can read what an LLM produces, fix the parts that drift, and ship.
+
+The pipeline collapses to four moves:
+
+1. **Brief the model.** Hand it the constraints: dimensions, fps, duration, the visual idea, the brand details (font, palette, copy), and one sample of "code that already works in this codebase" so it matches the project shape.
+2. **Get a Composition back.** The model returns a single React component plus its imports — nothing else. No `<Player>`, no `registerRoot`, no markdown around it.
+3. **Drop it into the render entry.** Save as `Step6.tsx`, register a new `<Composition>` block in `render/Root.tsx` pointing at it, choose `durationInFrames` and `fps`.
+4. **Render.** `npx remotion render render/index.ts Step6 out/step6.mp4`. Watch the result, prompt-edit the parts that look wrong, render again.
+
+A prompt template that holds up across models:
+
+```text | pure
+You are writing a single Remotion Composition component in TypeScript.
+
+Constraints:
+- 1280×720, 30 fps, 12 seconds (360 frames)
+- Brand font: Inter (already loaded via @remotion/google-fonts/Inter,
+  use `loadFont().fontFamily`)
+- Palette: deep navy → electric blue gradient
+- Use only these Remotion APIs: useCurrentFrame, useVideoConfig,
+  interpolate, spring, Sequence
+- No external assets, no audio, no images
+- Return ONLY the component code (no markdown fences, no commentary)
+
+Visual brief:
+<one paragraph describing what should happen on screen — beats,
+copy, timing if you have a preference>
+
+Reference (code that already works in this codebase):
+<paste the body of an existing step like step3-spring.tsx>
+```
+
+The "reference" line matters more than the brief. Models drift toward generic-looking output unless you anchor them to your house style. One pasted snippet is usually enough.
+
+What still goes wrong, even with a good prompt:
+
+- **Timing feels off.** Models guess at frame ranges. Tweak the `interpolate` input ranges by hand — this is faster than re-prompting.
+- **Spring physics oscillate too long.** Bump `damping` from the model's default (often 10) up to 12–14.
+- **Hardcoded fps.** Models sometimes write `fps: 30` literally. Replace with `useVideoConfig().fps` so the Composition stays portable.
+- **Layout breaks at non-default aspect ratios.** Pin width/height in pixels, not percentages, when prompting.
+
+The honest takeaway: the model writes ~80% of the file in seconds. The remaining 20% is reading, nudging, and re-rendering — the workflow this thread was built to make possible.
 
 ## Render to MP4 (CLI)
 
@@ -175,14 +226,15 @@ Output formats include `mp4` (default, h264), `webm`, `gif`, and `png-sequence`.
 The CLI render is **not** wired into this docs site's CI — running headless Chromium in GitHub Actions is fine but slow and not needed here. Run renders locally. `out/` is gitignored.
 :::
 
-## What's next
+## What this unlocks
 
-This thread covers the smallest path from "blank page" to "rendered MP4". For real production work, the [Remotion docs](https://www.remotion.dev/docs/) go deeper into:
+Once "an LLM produces a Composition" is a tool in your belt, the interesting work moves up a level — to deciding what to point it at. A few patterns worth playing with:
 
-- [Audio](https://www.remotion.dev/docs/audio) — sync narration, music beds, and trim clips.
-- [Captions](https://www.remotion.dev/docs/captions) — Whisper transcripts wired into Sequences.
-- [Charts](https://www.remotion.dev/docs/animating-charts) — animating data with Recharts/D3 inside Compositions.
-- [3D scenes](https://www.remotion.dev/docs/three) — Three.js / React Three Fiber inside Remotion.
-- [Lambda rendering](https://www.remotion.dev/docs/lambda) — render long videos in parallel on AWS.
+- **Daily auto-renders driven by data.** Cron job → fetch yesterday's metrics → prompt LLM with the numbers and a Composition template → `remotion render` → upload. End-state: a 30-second highlight reel that did not exist this morning.
+- **Captioned shortform.** Whisper transcribes a podcast clip → LLM picks the best 60 seconds and writes a `<Sequence>` per phrase with its own animation. This is the entire shape of products like SubMagic and Captions.ai, built on top of Remotion.
+- **Branded explainer videos at request volume.** Customer pastes a paragraph, an LLM writes a Composition that walks through the key points with the company's font and palette, render returns a link.
+- **Long-form charts that show their work.** D3-rendered chart inside a Composition, animated frame by frame. The model writes the animation logic; you supply the data.
 
-The mental model stays the same the whole way down: every frame is a function of the frame number. The rest is composition.
+For deeper work the [Remotion docs](https://www.remotion.dev/docs/) cover [audio](https://www.remotion.dev/docs/audio), [captions](https://www.remotion.dev/docs/captions), [charts](https://www.remotion.dev/docs/animating-charts), [3D / R3F](https://www.remotion.dev/docs/three), and [Lambda rendering](https://www.remotion.dev/docs/lambda) for parallel cloud renders.
+
+The mental model stays the same the whole way down: every frame is a function of the frame number. The rest — including who or what writes that function — is composition.
