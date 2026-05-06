@@ -174,7 +174,7 @@ You are writing a single Remotion Composition component in TypeScript.
 
 Constraints:
 - 1280×720, 30 fps, 15 seconds (450 frames)
-- Brand color: #E41B23 (Sioux red), accent: white
+- Brand color: #f15d03 (Sioux orange), accent: white
 - Font: Inter (already loaded via @remotion/google-fonts/Inter,
   use `loadFont().fontFamily`)
 - Use only: useCurrentFrame, useVideoConfig, interpolate, spring
