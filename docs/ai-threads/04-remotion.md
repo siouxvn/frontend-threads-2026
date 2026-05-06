@@ -71,15 +71,40 @@ A real video is rarely a single composition. `<Sequence from={N} durationInFrame
 
 That covers placement. The next step adds polish — fonts, gradients, and a transition between the scenes.
 
-## Step 5 — Final cut
+## Step 5 — Code as a frame-function
 
-This step layers in three production niceties:
+Steps 1–4 each isolated one primitive. The final cut puts them all on screen at once — and pulls a meta trick: the demo is a **split-screen**. The left side types the source code character by character. The right side renders the result of that source code. Both panels are pure functions of `useCurrentFrame()`.
 
-- A linear-gradient background instead of flat color.
-- The **Inter** Google Font, loaded via `@remotion/google-fonts/Inter`. `loadFont()` runs at module top, returns the resolved `fontFamily`, and registers the font with the renderer so the CLI render also picks it up.
-- A **fade transition** between the two scenes using `<TransitionSeries>` from `@remotion/transitions`. `TransitionSeries.Transition` consumes some frames from both adjacent sequences — the second sequence's `durationInFrames` is extended by the transition duration so the total length stays balanced.
+The typewriter is not a sequence of `<Sequence>` blocks. It is one line of math:
+
+```tsx | pure
+const charsRevealed = Math.floor(
+  interpolate(frame, [0, endFrame], [0, source.length], {
+    extrapolateRight: 'clamp',
+  }),
+);
+const visible = source.slice(0, charsRevealed);
+```
+
+That is the whole framework in 6 lines: read the frame, map it to a number, slice a string. Add a blinking caret (`frame % 30 < 15`) and minimal regex-based syntax highlighting and you have an editor on screen.
+
+The right panel is a mini-reel that boots up after the code finishes typing:
+
+| Frame range | Beat |
+| --- | --- |
+| 0–130 | "Compiling" — three pulsing dots while the code types |
+| 130–220 | Title `Remotion` springs in (uses the same `spring()` from step 3) |
+| 220–340 | Tagline `Build videos with React` fades + lifts (uses `interpolate`) |
+| 280–380 | Whole right group scales 1.0 → 1.04 — a subtle camera push |
+| 340–450 | `remotion.dev →` CTA fades in, holds |
+
+A linear-gradient background drives a slow hue shift across the entire reel — `interpolate(frame, [0, 450], [220, 280])` feeding `hsl()`. Inter is loaded via `@remotion/google-fonts/Inter` for headlines; the editor stays on the system monospace stack so it matches the host font you would see in VS Code.
 
 <code src="./demos/remotion/step5-final.tsx"></code>
+
+:::info
+The shared `<CodeTypewriter>` lives in `./demos/remotion/shared/code-typewriter.tsx`. It is reusable boilerplate — pass any source string and a frame range. The interesting code is everything else in this step.
+:::
 
 :::warning
 The Player preview is a **fast approximation**, not the final render. Codec, font hinting, and color profile differ between the in-browser player and the CLI MP4 output. Treat the Player as your fast feedback loop and verify the final cut by running an actual `remotion render`.
