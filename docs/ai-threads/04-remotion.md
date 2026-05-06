@@ -124,8 +124,10 @@ The pipeline collapses to four moves:
 
 1. **Brief the model.** Hand it the constraints: dimensions, fps, duration, the visual idea, the brand details (font, palette, copy), and one sample of "code that already works in this codebase" so it matches the project shape.
 2. **Get a Composition back.** The model returns a single React component plus its imports — nothing else. No `<Player>`, no `registerRoot`, no markdown around it.
-3. **Drop it into the render entry.** Save as `Step6.tsx`, register a new `<Composition>` block in `render/Root.tsx` pointing at it, choose `durationInFrames` and `fps`.
-4. **Render.** `npx remotion render render/index.ts Step6 out/step6.mp4`. Watch the result, prompt-edit the parts that look wrong, render again.
+3. **Drop it into the render entry.** Save the component, register a new `<Composition>` block in `render/Root.tsx` pointing at it, choose `durationInFrames` and `fps`.
+4. **Render.** `npx remotion render render/index.ts <CompositionId> out/clip.mp4`. Watch the result, prompt-edit the parts that look wrong, render again.
+
+Step 6 below is exactly this pipeline run end to end, with the prompt and the rendered output both visible.
 
 A prompt template that holds up across models:
 
@@ -160,6 +162,57 @@ What still goes wrong, even with a good prompt:
 - **Layout breaks at non-default aspect ratios.** Pin width/height in pixels, not percentages, when prompting.
 
 The honest takeaway: the model writes ~80% of the file in seconds. The remaining 20% is reading, nudging, and re-rendering — the workflow this thread was built to make possible.
+
+## Step 6 — A worked example: a Sioux brand intro
+
+This step runs the pipeline above end to end against a real brief: a 15-second intro reel for [Sioux Technologies](https://www.siouxtechnologies.com/en/) — the company that hosts this docs site. Same primitives as steps 1–5, no new APIs introduced.
+
+**The prompt:**
+
+```text | pure
+You are writing a single Remotion Composition component in TypeScript.
+
+Constraints:
+- 1280×720, 30 fps, 15 seconds (450 frames)
+- Brand color: #E41B23 (Sioux red), accent: white
+- Font: Inter (already loaded via @remotion/google-fonts/Inter,
+  use `loadFont().fontFamily`)
+- Use only: useCurrentFrame, useVideoConfig, interpolate, spring
+- No external assets
+
+Visual brief — a 15s brand intro reel for Sioux Technologies:
+- Beat 1 (0–60f, 2s): solid red bg, "SIOUX" wordmark spring-scales
+  in centered, large bold sans-serif.
+- Beat 2 (60–150f, 3s): wordmark slides up and shrinks; tagline
+  "We bring high-tech to life" reveals letter-by-letter via
+  interpolate + slice with a blinking caret.
+- Beat 3 (150–270f, 4s): competency carousel — embedded software,
+  application software, mechatronics, mathware, electronics,
+  assembly — each shown ~20f with crossfade.
+- Beat 4 (270–360f, 3s): grid of 6 white-outlined pill chips fade
+  in staggered (8f apart), each holding an industry — semiconductors,
+  medical devices, mobility, telecom, agro & food, analytical.
+- Beat 5 (360–420f, 2s): hero moment "High-Tech & High-Fun"
+  italicized, big.
+- Beat 6 (420–450f, 1s): CTA — SIOUX wordmark + siouxtechnologies.com
+  monospace pill, with subtle white circuit-corner accents that
+  hold across all beats.
+
+Reference (existing house style):
+<paste the body of step5-composition.tsx>
+```
+
+**The output, rendered:**
+
+<code src="./demos/remotion/step6-sioux-intro.tsx"></code>
+
+**The render command:**
+
+```bash
+npx remotion render render/index.ts Step6Sioux out/sioux-intro.mp4
+```
+
+Two manual nudges after the model's first pass: spring `damping` got bumped from 10 to 14 so the wordmark stopped oscillating, and the pill grid `gap` was tightened from 32 to 18 so all six fit on one row at 1280 wide. Both fixes were 30 seconds with the eyes that steps 1–4 built. The remaining ~80% of the Composition came from the prompt as-is.
 
 ## Render to MP4 (CLI)
 
