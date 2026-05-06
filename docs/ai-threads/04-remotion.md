@@ -112,26 +112,29 @@ The Player preview is a **fast approximation**, not the final render. Codec, fon
 
 ## Render to MP4 (CLI)
 
-The Player is great for iteration, but to ship a video you render it headlessly with the CLI. This requires one more package and a tiny `Root.tsx` that registers the Composition.
+The Player is for fast iteration. To ship a video you render it headlessly. The CLI bundles your Composition with webpack, opens a headless Chromium, and writes one frame at a time before stitching them with FFmpeg.
+
+The trick: the **bare Composition** must be importable without a `<Player>` wrapper around it. In this repo we extracted [`Step5Composition`](https://github.com/siouxvn/frontend-threads-2026/blob/main/docs/ai-threads/demos/remotion/shared/step5-composition.tsx) so both the Player demo above and the CLI render reuse the same source.
+
+Install the CLI (already in this repo's `devDependencies`):
 
 ```bash
-npm i -D @remotion/cli @remotion/bundler @remotion/renderer
+npm i -D @remotion/cli@4.0.457
 ```
 
-Create a `remotion/Root.tsx` that wraps the same Composition you tested in step 5:
+[`render/Root.tsx`](https://github.com/siouxvn/frontend-threads-2026/blob/main/render/Root.tsx) registers the bare Composition under an id you can render by name:
 
 ```tsx | pure
+import React from 'react';
 import { Composition } from 'remotion';
 
-import Step5Final from '../docs/ai-threads/demos/remotion/step5-final';
-// In a real project, extract the Composition out of the Player wrapper
-// and import that directly here. The Player wrapper exists only for the docs.
+import { Step5Composition } from '../docs/ai-threads/demos/remotion/shared/step5-composition';
 
 export const RemotionRoot = () => {
   return (
     <Composition
-      id="Intro"
-      component={Step5Final}
+      id="Step5"
+      component={Step5Composition}
       durationInFrames={450}
       fps={30}
       width={1280}
@@ -141,7 +144,7 @@ export const RemotionRoot = () => {
 };
 ```
 
-Register the root in `remotion/index.ts`:
+[`render/index.ts`](https://github.com/siouxvn/frontend-threads-2026/blob/main/render/index.ts) is a one-liner:
 
 ```tsx | pure
 import { registerRoot } from 'remotion';
@@ -151,16 +154,25 @@ import { RemotionRoot } from './Root';
 registerRoot(RemotionRoot);
 ```
 
-Then render:
+Render:
 
 ```bash
-npx remotion render remotion/index.ts Intro out/intro.mp4
+# Default: 1280×720 mp4 to out/step5.mp4
+npx remotion render render/index.ts Step5 out/step5.mp4
+
+# Higher quality, 2× supersample then downscale
+npx remotion render render/index.ts Step5 out/step5.mp4 --scale=2 --crf=18
+
+# WebM
+npx remotion render render/index.ts Step5 out/step5.webm --codec=vp9
 ```
 
-Output formats supported by the renderer include `mp4` (default), `webm`, `gif`, and `png-sequence` (one PNG per frame for downstream tooling). Pass `--codec=h264 --crf=18` for higher quality, or `--scale=2` to render at 2× resolution and downscale.
+The first run downloads a pinned Chromium (~150 MB) into `node_modules/@remotion/`. Subsequent renders skip that step.
+
+Output formats include `mp4` (default, h264), `webm`, `gif`, and `png-sequence`. `--scale` supersamples; `--crf` controls quality (lower = better, 18 is high quality, 23 is default).
 
 :::info
-The CLI render runs headless Chromium, which is **not** wired into this docs site's CI. Run renders on your own machine. The Player demo on this page is what readers see in the browser.
+The CLI render is **not** wired into this docs site's CI — running headless Chromium in GitHub Actions is fine but slow and not needed here. Run renders locally. `out/` is gitignored.
 :::
 
 ## What's next
