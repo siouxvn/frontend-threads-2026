@@ -7,32 +7,35 @@ const { fontFamily } = loadFont();
 const SIOUX_ORANGE = '#f15d03';
 const TAGLINE = 'We bring high-tech to life';
 
+// Competences & Markets are taken verbatim from the site's nav menus
+// at siouxtechnologies.com — same labels, same order.
 const COMPETENCIES = [
-  'embedded software',
-  'application software',
-  'mechatronics',
-  'mathware',
-  'electronics',
-  'assembly',
+  'Embedded Software',
+  'Application Software',
+  'Mechatronics',
+  'Mechanics',
+  'Mathware',
+  'Electronics',
+  'Assembly',
 ];
 
 const INDUSTRIES = [
-  'semiconductors',
-  'medical devices',
-  'mobility',
-  'telecom',
-  'agro & food',
-  'analytical',
+  'Semicon',
+  'Analytical',
+  'Medical',
+  'Mobility & Infra',
+  'Telecom',
+  'Agro & Food',
 ];
 
 // Beat boundaries (frames @ 30fps)
 const B1 = 60; // wordmark reveal ends
 const B2 = 150; // tagline reveal ends
-const B3 = 270; // competencies cycle ends
-const B4 = 360; // industry pills end
-const B5 = 420; // brand wit ends
-const B6 = 450; // CTA ends, dedication enters
-// 450–510: dedication holds (Sioux 30th anniversary)
+const B3 = 290; // competencies cycle ends (7 entries × 20f)
+const B4 = 380; // industry pills end
+const B5 = 440; // brand wit ends
+const B6 = 470; // CTA ends, dedication enters
+// 470–530: dedication holds (Sioux 30th anniversary)
 
 // Visibility window: ramps up over `fade` frames at `enter`, holds, ramps down
 // at `exit`. Returns 0..1 opacity.
@@ -142,7 +145,7 @@ export const Step6SiouxComposition = () => {
   const witOpacity = win(frame, B4, B5);
   const ctaOpacity = win(frame, B5, B6, 8);
 
-  // Dedication — final 60 frames (450–510). Sioux turns 30 in 2026.
+  // Dedication — final 60 frames (470–530). Sioux turns 30 in 2026.
   const dedicationOpacity = interpolate(frame, [B6, B6 + 18], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',

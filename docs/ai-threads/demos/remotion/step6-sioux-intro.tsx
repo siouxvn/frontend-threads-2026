@@ -9,5 +9,5 @@ import { PlayerShell } from './shared/player-shell';
 import { Step6SiouxComposition } from './shared/step6-sioux-composition';
 
 export default function Step6SiouxIntro() {
-  return <PlayerShell composition={Step6SiouxComposition} durationInFrames={510} />;
+  return <PlayerShell composition={Step6SiouxComposition} durationInFrames={530} />;
 }

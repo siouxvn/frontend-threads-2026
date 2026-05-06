@@ -133,7 +133,7 @@ Step 6 below is exactly this workflow run end to end, with the actual conversati
 
 ## Step 6 — A worked example: a Sioux brand intro
 
-A real run of the pipeline above against a real brief: a 17-second intro reel for [Sioux Technologies](https://www.siouxtechnologies.com/en/) — the company that hosts this docs site. Same primitives as steps 1–5, no new APIs.
+A real run of the pipeline above against a real brief: a brand intro reel for [Sioux Technologies](https://www.siouxtechnologies.com/en/) — the company that hosts this docs site. Same primitives as steps 1–5, no new APIs.
 
 **The actual conversation:**
 
@@ -164,6 +164,15 @@ You (later): Sioux turns 30 in 2026 — add a final dedication
 
 Me:  [Extended duration 450→510 frames (15s→17s), added a
      spring-fade dedication beat after the CTA at 450–510.]
+
+You (later): The competencies and markets in the demo don't
+     match the actual nav on the Sioux site. Use the real labels.
+
+Me:  [Replaced the 6 lowercase competencies with the 7 Title-
+     Cased ones from the site nav (Mechanics was missing) and
+     the 6 markets with their actual labels (Semicon, Analytical,
+     Medical, Mobility & Infra, Telecom, Agro & Food). Extended
+     beat 3 by one entry × 20 frames; total 530.]
 ```
 
 **The output, rendered:**
@@ -176,11 +185,12 @@ Me:  [Extended duration 450→510 frames (15s→17s), added a
 npx remotion render render/index.ts Step6Sioux out/sioux-intro.mp4
 ```
 
-Three real fixes after the first pass — none predicted by the model, all spotted by eye after watching the Player loop:
+Real fixes after the first pass — none predicted by the model, all spotted by eye after watching the Player loop:
 
 - **Brand color was wrong.** The corporate-logo SVG had `#E41B23` (red) in its geometric motif, so the model defaulted to that. The actual Sioux primary is `#f15d03` (orange) — a one-line swap once you spot it.
-- **Competency labels overflowed.** "embedded software" and "application software" wrapped to two lines and threw off the centred layout. Fix: drop `fontSize` from 88 to 64 and pin `whiteSpace: nowrap`.
+- **Competency labels overflowed.** "Embedded Software" and "Application Software" wrapped to two lines and threw off the centred layout. Fix: drop `fontSize` from 88 to 64 and pin `whiteSpace: nowrap`.
 - **Industry pill rows split to top and bottom.** `flexWrap: wrap` on a full-frame container with default `align-content: stretch` pushed the rows apart. Fix: add `alignContent: 'center'` so the rows hug the middle.
+- **Competencies and markets did not match the site.** The model summarised the brand from one page and dropped one item plus standardised the casing. Fix: copy the lists verbatim from the site's nav menus.
 
 Each fix was a single property in the Composition. Steps 1–4 are what made them visible at all.
 
