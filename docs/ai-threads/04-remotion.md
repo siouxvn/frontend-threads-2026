@@ -133,7 +133,7 @@ Step 6 below is exactly this workflow run end to end, with the actual conversati
 
 ## Step 6 — A worked example: a Sioux brand intro
 
-A real run of the pipeline above against a real brief: a 15-second intro reel for [Sioux Technologies](https://www.siouxtechnologies.com/en/) — the company that hosts this docs site. Same primitives as steps 1–5, no new APIs.
+A real run of the pipeline above against a real brief: a 17-second intro reel for [Sioux Technologies](https://www.siouxtechnologies.com/en/) — the company that hosts this docs site. Same primitives as steps 1–5, no new APIs.
 
 **The actual conversation:**
 
@@ -157,6 +157,13 @@ You: Yes / yes / yes / 15s.
 
 Me:  [Generated the bare Composition, registered it in
      render/Root.tsx, embedded the demo in the article.]
+
+You (later): Sioux turns 30 in 2026 — add a final dedication
+     beat: "Happy 30th anniversary of Sioux. From Thinh Kieu,
+     with love."
+
+Me:  [Extended duration 450→510 frames (15s→17s), added a
+     spring-fade dedication beat after the CTA at 450–510.]
 ```
 
 **The output, rendered:**

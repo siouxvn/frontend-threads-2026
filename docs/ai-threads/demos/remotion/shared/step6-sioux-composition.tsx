@@ -31,7 +31,8 @@ const B2 = 150; // tagline reveal ends
 const B3 = 270; // competencies cycle ends
 const B4 = 360; // industry pills end
 const B5 = 420; // brand wit ends
-// 420–450: CTA holds
+const B6 = 450; // CTA ends, dedication enters
+// 450–510: dedication holds (Sioux 30th anniversary)
 
 // Visibility window: ramps up over `fade` frames at `enter`, holds, ramps down
 // at `exit`. Returns 0..1 opacity.
@@ -139,9 +140,17 @@ export const Step6SiouxComposition = () => {
   const pillsOpacity = win(frame, B3, B4);
   const witScale = spring({ frame: frame - B4, fps, config: { damping: 12 } });
   const witOpacity = win(frame, B4, B5);
-  const ctaOpacity = interpolate(frame, [B5, B5 + 20], [0, 1], {
+  const ctaOpacity = win(frame, B5, B6, 8);
+
+  // Dedication — final 60 frames (450–510). Sioux turns 30 in 2026.
+  const dedicationOpacity = interpolate(frame, [B6, B6 + 18], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
+  });
+  const dedicationScale = spring({
+    frame: frame - B6,
+    fps,
+    config: { damping: 14 },
   });
 
   return (
@@ -250,6 +259,43 @@ export const Step6SiouxComposition = () => {
           }}
         >
           siouxtechnologies.com →
+        </div>
+      </div>
+
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: 22,
+          opacity: dedicationOpacity,
+          transform: `scale(${dedicationScale})`,
+          padding: '0 80px',
+          textAlign: 'center',
+        }}
+      >
+        <div
+          style={{
+            fontSize: 56,
+            fontWeight: 700,
+            letterSpacing: -0.5,
+            lineHeight: 1.15,
+          }}
+        >
+          Happy 30th anniversary of Sioux.
+        </div>
+        <div
+          style={{
+            fontSize: 30,
+            fontWeight: 400,
+            fontStyle: 'italic',
+            opacity: 0.92,
+          }}
+        >
+          From Thinh Kieu, with love.
         </div>
       </div>
 
