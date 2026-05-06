@@ -191,9 +191,11 @@ export const Step6SiouxComposition = () => {
           top: '52%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          fontSize: 88,
+          fontSize: 64,
           fontWeight: 700,
           opacity: compOpacity,
+          whiteSpace: 'nowrap',
+          textAlign: 'center',
         }}
       >
         {COMPETENCIES[compIndex]}
