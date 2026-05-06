@@ -4,7 +4,7 @@ import { interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 
 const { fontFamily } = loadFont();
 
-const SIOUX_RED = '#E41B23';
+const SIOUX_ORANGE = '#f15d03';
 const TAGLINE = 'We bring high-tech to life';
 
 const COMPETENCIES = [
@@ -149,7 +149,7 @@ export const Step6SiouxComposition = () => {
       style={{
         position: 'absolute',
         inset: 0,
-        background: SIOUX_RED,
+        background: SIOUX_ORANGE,
         color: 'white',
         fontFamily,
         overflow: 'hidden',
