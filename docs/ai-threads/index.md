@@ -9,6 +9,8 @@ nav:
 
 ## Projects
 
+- [Work in parallel with AI](./05-work-in-parallel.md) — tips for running AI agents across multiple repos
+
 ## Resources
 
 - https://anthropic.skilljar.com/ai-fluency-framework-foundations

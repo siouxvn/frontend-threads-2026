@@ -6,6 +6,8 @@ Source: https://d.umijs.org/guide/markdown
 
 ## Frontmatter
 
+> **YAML gotcha:** unquoted `#` starts a comment. A bare `title: Tip #1 — Foo` parses as `Tip` and silently drops the rest. Quote any value containing `#`, `:`, `[`, `]`, `{`, `}`, `,`, `&`, `*`, or leading `-`/`?`/`!`/`@`/`%` — for example `title: 'Tip #1 — Pin the git author'`. Either single or double quotes work.
+
 ```yaml
 ---
 title: Page Title # shown in <title> and sidebar; auto-derived from first # heading
@@ -125,6 +127,29 @@ Add `| pure` to prevent rendering as a demo:
 
 ---
 
+## Collapsible Code Blocks
+
+Dumi v2 preserves raw `<details>` / `<summary>` HTML and compiles them to JSX. Fenced code inside keeps Prism syntax highlighting.
+
+**Verified 2026-05-07** by inspecting the built chunk for `docs/ai-threads/05-work-in-parallel.md` — Dumi emitted `jsxs("details", { children: [jsx("summary", ...), jsx(CodeBlock, { lang: "js", ... })] })`, so the highlighter still runs on code inside the collapsed region.
+
+`````md
+<details>
+<summary>Click to expand (~280 lines)</summary>
+
+```js
+// long source listing
+```
+
+</details>
+`````
+
+**Required:** keep blank lines around the fenced code block inside `<details>` so the markdown parser still recognizes it as code, not literal HTML.
+
+Use for: long source listings (>~100 lines) that would otherwise dominate the page. Default-collapsed; reader expands on demand.
+
+---
+
 ## External Demo File
 
 ```md
@@ -209,3 +234,37 @@ Development-only attributes:
 | `.hidden.md`          | ignored (dot prefix)                    |
 
 `index.md` and `README.md` represent the folder itself (no slug suffix).
+
+---
+
+## Sidebar Groups vs Top Nav (gotcha)
+
+`nav` and `group` are independent concerns and render in different places:
+
+- **`nav`** controls TOP nav bar placement. Pages sharing `nav.title` end up in the same top-nav section.
+- **`group`** clusters pages in the LEFT sidebar within a single nav section. It does **not** add anything to the top nav bar.
+
+To group multiple pages of one topic in the sidebar, give them all the **same flat folder + same `group.title`**:
+
+```yaml
+# both files in docs/<section>/, no sub-folder:
+# 05-topic-intro.md
+nav: { title: AI, order: 2 }
+group: { title: Multi-page topic, order: 5 }
+title: Multi-page topic
+order: 1   # within group: 1 = landing
+---
+# 05-topic-tip.md
+nav: { title: AI, order: 2 }
+group: { title: Multi-page topic, order: 5 }
+title: Tip — ...
+order: 2
+```
+
+Sidebar then shows the topic as a labeled cluster ("Multi-page topic" header + child pages).
+
+### Pitfall: nested folder under a nav section creates a top-nav dropdown
+
+Putting topic pages under `docs/<section>/<topic-folder>/*.md` causes Dumi to treat the folder as a **second-level nav**, surfacing the folder as a dropdown in the top nav bar — even with `group: false`, `nav: false`, or `sidebar: false` on the inner pages. The dropdown reflects file-based routing, not the group field.
+
+**Rule:** for grouped multi-page topics within an existing nav section, use **flat sibling files + `group` frontmatter**. Reach for nested folders only when the topic genuinely deserves its own top-nav entry.
