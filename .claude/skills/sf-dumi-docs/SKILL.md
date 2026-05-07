@@ -92,6 +92,10 @@ Append `| pure` to the language tag:
 ```
 ````
 
+### Collapsible source listing
+
+Wrap a fenced code block in `<details><summary>…</summary>` with **blank lines around the fence** so the markdown parser still treats it as code. Dumi preserves the raw HTML and Prism still highlights the code inside (verified). Use when the listing is >~100 lines. See `references/dumi-syntax.md` for the full pattern.
+
 ### Demo folder layout
 
 ```

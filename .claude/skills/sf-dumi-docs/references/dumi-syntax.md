@@ -125,6 +125,29 @@ Add `| pure` to prevent rendering as a demo:
 
 ---
 
+## Collapsible Code Blocks
+
+Dumi v2 preserves raw `<details>` / `<summary>` HTML and compiles them to JSX. Fenced code inside keeps Prism syntax highlighting.
+
+**Verified 2026-05-07** by inspecting the built chunk for `docs/ai-threads/05-work-in-parallel.md` — Dumi emitted `jsxs("details", { children: [jsx("summary", ...), jsx(CodeBlock, { lang: "js", ... })] })`, so the highlighter still runs on code inside the collapsed region.
+
+`````md
+<details>
+<summary>Click to expand (~280 lines)</summary>
+
+```js
+// long source listing
+```
+
+</details>
+`````
+
+**Required:** keep blank lines around the fenced code block inside `<details>` so the markdown parser still recognizes it as code, not literal HTML.
+
+Use for: long source listings (>~100 lines) that would otherwise dominate the page. Default-collapsed; reader expands on demand.
+
+---
+
 ## External Demo File
 
 ```md
