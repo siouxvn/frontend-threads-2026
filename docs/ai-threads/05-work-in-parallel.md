@@ -11,15 +11,15 @@ keywords: [ai, parallel, workflow, claude code, git, multi-repo, hooks]
 
 Running one agent on one repo is easy. Running several agents across several repos at once — your day job, your side project, an experimental fork, a colleague's checkout — is where the cheap mistakes start hiding.
 
-The problem is not the agent. The problem is **shared global state**: one global git config, one shell, one set of credentials, one hands-off operator. Each agent works correctly _in isolation_; the damage is in the seams between them.
+Each agent works correctly _in isolation_. The damage is in the seams between them: state they share without realizing, defaults they fall back to without asking, decisions they make on your behalf because no one is watching.
 
-This page is a hub. Tip #1 is the one that has saved me the most rework so far.
+This page is a running list of tips, in the order I hit them.
 
 ## Tip #1 — Pin the git author per repo
 
 ### Why it matters
 
-`git commit` falls back to **global** `user.email` / `user.name` when the repo has no local override. That is a sensible default for a single human on a single laptop. It is a trap when:
+The first seam most people hit is **shared global git state**. `git commit` falls back to global `user.email` / `user.name` when the repo has no local override — a sensible default for a single human on a single laptop, but a trap when:
 
 - Your global identity is your work email, but you cloned an open-source repo into the same machine.
 - You cloned a colleague's branch and started committing while still set up as them globally.
